@@ -52,21 +52,25 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
       }
 
       setLoading(true);
-      const { user, error } = await AuthService.signUp(email, password, displayName);
+      const { user, session, error } = await AuthService.signUp(email, password, displayName);
       setLoading(false);
 
       if (error) {
         setErrorMsg(error);
+      } else if (user && user.identities && user.identities.length === 0) {
+        setErrorMsg('An account with this email already exists.');
+      } else if (session) {
+        setSuccessMsg('🌱 Account created! Loading your garden...');
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1000);
       } else {
-        if (user && user.identities && user.identities.length === 0) {
-          setErrorMsg('An account with this email already exists.');
-        } else {
-          setSuccessMsg('🌱 Account created! Checking session...');
-          setTimeout(() => {
-            onSuccess();
-            onClose();
-          }, 1200);
-        }
+        setSuccessMsg('🌱 Account created! Please check your email or disable "Confirm email" in Supabase settings.');
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 2200);
       }
     } else if (mode === 'login') {
       setLoading(true);
@@ -247,16 +251,101 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
         {errorMsg && (
           <div
             style={{
-              background: '#fee2e2',
+              background: '#fef2f2',
               border: '1px solid #fca5a5',
               borderRadius: 'var(--radius-md)',
-              padding: '10px 14px',
-              color: '#b91c1c',
+              padding: '12px 14px',
+              color: '#991b1b',
               fontSize: '13px',
-              marginBottom: '16px'
+              marginBottom: '16px',
+              lineHeight: 1.45
             }}
           >
-            {errorMsg}
+            <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>⚠️</span>
+              <span>
+                {errorMsg.toLowerCase().includes('rate limit')
+                  ? 'Supabase Email Rate Limit Exceeded'
+                  : errorMsg.toLowerCase().includes('invalid login credentials')
+                  ? 'Invalid Email or Password'
+                  : 'Authentication Error'}
+              </span>
+            </div>
+            <div style={{ color: '#b91c1c' }}>{errorMsg}</div>
+
+            {/* Smart resolution advice for email rate limit */}
+            {errorMsg.toLowerCase().includes('rate limit') && (
+              <div
+                style={{
+                  marginTop: '10px',
+                  paddingTop: '10px',
+                  borderTop: '1px dashed #fca5a5',
+                  fontSize: '12px',
+                  color: '#7f1d1d'
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                  Quick 15-second fix in Supabase:
+                </div>
+                <div style={{ marginBottom: '6px' }}>
+                  Supabase limits free projects to 3 confirmation emails/hr. Turn off email verification to enable instant signups:
+                </div>
+                <ol style={{ margin: '0 0 10px 16px', padding: 0, fontSize: '11.5px', lineHeight: 1.5 }}>
+                  <li>Open <strong>Supabase Dashboard → Authentication → Providers</strong></li>
+                  <li>Click <strong>Email</strong> to expand</li>
+                  <li>Switch toggle <strong>"Confirm email"</strong> to <strong>OFF</strong></li>
+                  <li>Click <strong>Save</strong></li>
+                </ol>
+                <a
+                  href={`https://supabase.com/dashboard/project/${
+                    AuthService.getCredentials().url.match(/https:\/\/([a-z0-9]+)\.supabase\.co/i)?.[1] || 'rucfaggbixppgexlvqgh'
+                  }/auth/providers`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#991b1b',
+                    color: '#ffffff',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    fontSize: '11px',
+                    marginTop: '2px'
+                  }}
+                >
+                  Open Supabase Auth Providers ↗
+                </a>
+              </div>
+            )}
+
+            {/* Smart tip for invalid credentials */}
+            {errorMsg.toLowerCase().includes('invalid login credentials') && mode === 'login' && (
+              <div style={{ marginTop: '8px', fontSize: '12px', color: '#7f1d1d' }}>
+                💡 If you haven't created your account yet, switch to{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setMode('register');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#991b1b',
+                    fontWeight: 700,
+                    textDecoration: 'underline',
+                    padding: 0,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Create Account
+                </button>{' '}
+                first!
+              </div>
+            )}
           </div>
         )}
 

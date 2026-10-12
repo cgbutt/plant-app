@@ -53,9 +53,9 @@ class AuthServiceClass {
   }
 
   // Register with email & password
-  public async signUp(email: string, password: string, displayName: string): Promise<{ user: User | null; error: string | null }> {
+  public async signUp(email: string, password: string, displayName: string): Promise<{ user: User | null; session: Session | null; error: string | null }> {
     const client = this.getClient();
-    if (!client) return { user: null, error: 'Supabase project not connected. Please connect your credentials.' };
+    if (!client) return { user: null, session: null, error: 'Supabase project not connected. Please connect your credentials.' };
 
     try {
       const { data, error } = await client.auth.signUp({
@@ -69,10 +69,10 @@ class AuthServiceClass {
         }
       });
 
-      if (error) return { user: null, error: error.message };
-      return { user: data.user, error: null };
+      if (error) return { user: null, session: null, error: error.message };
+      return { user: data.user, session: data.session, error: null };
     } catch (err: any) {
-      return { user: null, error: err.message || 'An unexpected error occurred during sign up.' };
+      return { user: null, session: null, error: err.message || 'An unexpected error occurred during sign up.' };
     }
   }
 
