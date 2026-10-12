@@ -835,23 +835,25 @@ body {
 
 /* 2-Column Grid on Mobile, Multi-Column on Desktop */
 .leafy-encyclopedia-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 20px;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin-top: 18px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 @media (min-width: 768px) {
   .leafy-encyclopedia-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 18px !important;
   }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1100px) {
   .leafy-encyclopedia-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 22px !important;
   }
 }
 
@@ -859,32 +861,75 @@ body {
   background: #ffffff;
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: all 0.22s ease;
   box-shadow: var(--shadow-sm);
   position: relative;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden;
 }
 
 .leafy-encyclopedia-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: var(--matcha);
 }
 
 .leafy-encyclopedia-card .card-img-wrapper {
-  width: 100%;
-  height: 150px;
-  border-radius: var(--radius-md);
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important; /* Forces squareish container matching Leafy reference */
+  height: auto !important;
+  border-radius: var(--radius-md) !important;
   background: var(--stone-light);
   overflow: hidden;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+.leafy-card-circle-bg {
+  position: absolute;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.leafy-encyclopedia-card .plant-img-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leafy-encyclopedia-card .organic-plant-img,
+.leafy-encyclopedia-card .plant-img-wrapper img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  border-radius: calc(var(--radius-md) - 2px);
+  transition: transform 0.3s ease;
+}
+
+.leafy-encyclopedia-card:hover .organic-plant-img,
+.leafy-encyclopedia-card:hover .plant-img-wrapper img {
+  transform: scale(1.06);
 }
 
 .leafy-card-heart-btn {
@@ -895,7 +940,7 @@ body {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);
   border: none;
   font-size: 13px;
@@ -903,7 +948,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.15s ease;
 }
 
@@ -912,17 +957,25 @@ body {
 }
 
 .leafy-encyclopedia-card .card-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-main);
   margin: 0 0 2px 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .leafy-encyclopedia-card .card-scientific {
-  font-size: 12px;
+  font-size: 11px;
   font-style: italic;
   color: var(--text-muted);
   margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================

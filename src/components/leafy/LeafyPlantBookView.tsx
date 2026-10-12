@@ -243,16 +243,8 @@ export const LeafyPlantBookView: React.FC<LeafyPlantBookViewProps> = ({
                 {/* Image wrapper with organic curved pastel shape and favorite heart */}
                 <div className="card-img-wrapper">
                   <div
-                    style={{
-                      position: 'absolute',
-                      width: '130px',
-                      height: '130px',
-                      borderRadius: '50%',
-                      background: pastelBgClass,
-                      top: '10px',
-                      left: '10px',
-                      zIndex: 1
-                    }}
+                    className="leafy-card-circle-bg"
+                    style={{ background: pastelBgClass }}
                   />
 
                   <PlantImage
