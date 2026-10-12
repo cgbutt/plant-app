@@ -1,0 +1,270 @@
+/* ==========================================================================
+   CUSTOM TYPOGRAPHY: Satoshi, Author, Array, Segment
+   Imported from C:\Users\EldenLord\Desktop\Fonts
+   ========================================================================== */
+
+/* --- SATOSHI (Modern Geometric Clean Sans UI) --- */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Variable.woff2') format('woff2'),
+       url('/fonts/Satoshi-Variable.woff') format('woff'),
+       url('/fonts/Satoshi-Variable.ttf') format('truetype');
+  font-weight: 300 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Light.woff2') format('woff2'),
+       url('/fonts/Satoshi-Light.woff') format('woff'),
+       url('/fonts/Satoshi-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2'),
+       url('/fonts/Satoshi-Regular.woff') format('woff'),
+       url('/fonts/Satoshi-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2'),
+       url('/fonts/Satoshi-Medium.woff') format('woff'),
+       url('/fonts/Satoshi-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2'),
+       url('/fonts/Satoshi-Bold.woff') format('woff'),
+       url('/fonts/Satoshi-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Black.woff2') format('woff2'),
+       url('/fonts/Satoshi-Black.woff') format('woff'),
+       url('/fonts/Satoshi-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Satoshi Named Families */
+@font-face {
+  font-family: 'Satoshi-Light';
+  src: url('/fonts/Satoshi-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi-Regular';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi-Medium';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi-Bold';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* --- AUTHOR (Editorial Humanist Sans) --- */
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Extralight.woff2') format('woff2'),
+       url('/fonts/Author-Extralight.woff') format('woff'),
+       url('/fonts/Author-Extralight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Light.woff2') format('woff2'),
+       url('/fonts/Author-Light.woff') format('woff'),
+       url('/fonts/Author-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Regular.woff2') format('woff2'),
+       url('/fonts/Author-Regular.woff') format('woff'),
+       url('/fonts/Author-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Italic.woff2') format('woff2'),
+       url('/fonts/Author-Italic.woff') format('woff'),
+       url('/fonts/Author-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Medium.woff2') format('woff2'),
+       url('/fonts/Author-Medium.woff') format('woff'),
+       url('/fonts/Author-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Semibold.woff2') format('woff2'),
+       url('/fonts/Author-Semibold.woff') format('woff'),
+       url('/fonts/Author-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author';
+  src: url('/fonts/Author-Bold.woff2') format('woff2'),
+       url('/fonts/Author-Bold.woff') format('woff'),
+       url('/fonts/Author-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Author Named Families */
+@font-face {
+  font-family: 'Author-Regular';
+  src: url('/fonts/Author-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author-Medium';
+  src: url('/fonts/Author-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author-Semibold';
+  src: url('/fonts/Author-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Author-Bold';
+  src: url('/fonts/Author-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+
+/* --- ARRAY (Geometric Display & Headings) --- */
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Regular.woff2') format('woff2'),
+       url('/fonts/Array-Regular.woff') format('woff'),
+       url('/fonts/Array-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Semibold.woff2') format('woff2'),
+       url('/fonts/Array-Semibold.woff') format('woff'),
+       url('/fonts/Array-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Bold.woff2') format('woff2'),
+       url('/fonts/Array-Bold.woff') format('woff'),
+       url('/fonts/Array-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Array Named Specific Variants */
+@font-face {
+  font-family: 'Array-Wide';
+  src: url('/fonts/Array-Wide.woff2') format('woff2'),
+       url('/fonts/Array-Wide.woff') format('woff');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Array-BoldWide';
+  src: url('/fonts/Array-BoldWide.woff2') format('woff2'),
+       url('/fonts/Array-BoldWide.woff') format('woff');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Array-SemiboldWide';
+  src: url('/fonts/Array-SemiboldWide.woff2') format('woff2'),
+       url('/fonts/Array-SemiboldWide.woff') format('woff');
+  font-weight: 600;
+  font-display: swap;
+}
+
+
+/* --- SEGMENT (Technical & Modular) --- */
+@font-face {
+  font-family: 'Segment';
+  src: url('/fonts/Segment-Regular.woff2') format('woff2'),
+       url('/fonts/Segment-Regular.woff') format('woff'),
+       url('/fonts/Segment-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Segment-Regular';
+  src: url('/fonts/Segment-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
