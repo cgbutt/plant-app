@@ -9,6 +9,8 @@ interface LeafyNavbarProps {
   onOpenAi: () => void;
   onOpen3dModels: () => void;
   onOpenProfile: () => void;
+  isLoggedIn?: boolean;
+  userAvatarUrl?: string;
 }
 
 export const LeafyNavbar: React.FC<LeafyNavbarProps> = ({
@@ -17,7 +19,9 @@ export const LeafyNavbar: React.FC<LeafyNavbarProps> = ({
   onOpenAddPlant,
   onOpenAi,
   onOpen3dModels,
-  onOpenProfile
+  onOpenProfile,
+  isLoggedIn,
+  userAvatarUrl
 }) => {
   return (
     <header className="leafy-desktop-navbar">
@@ -110,14 +114,24 @@ export const LeafyNavbar: React.FC<LeafyNavbarProps> = ({
             <span>+ Add Plant</span>
           </button>
 
-          {/* User Profile Avatar */}
-          <img
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80"
-            alt="User profile"
-            className="leafy-nav-avatar"
-            title="Account & Settings"
-            onClick={onOpenProfile}
-          />
+          {/* User Profile Avatar / Sign In */}
+          {isLoggedIn ? (
+            <img
+              src={userAvatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80"}
+              alt="User profile"
+              className="leafy-nav-avatar"
+              title="Account & Settings"
+              onClick={onOpenProfile}
+            />
+          ) : (
+            <button
+              className="leafy-btn-secondary"
+              style={{ padding: '8px 16px', fontSize: '13px' }}
+              onClick={onOpenProfile}
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>

@@ -12,6 +12,8 @@ interface LeafyHomeViewProps {
   onOpenJournal: () => void;
   onOpenExplore: () => void;
   onOpenMenu: () => void;
+  userDisplayName?: string;
+  userAvatarUrl?: string;
   onOpenProfile: () => void;
   onOpenAi: () => void;
 }
@@ -21,6 +23,8 @@ export const LeafyHomeView: React.FC<LeafyHomeViewProps> = ({
   journalEntries,
   photos,
   selectedPlantId,
+  userDisplayName,
+  userAvatarUrl,
   onSelectPlant,
   onOpenPlantDetail,
   onOpenAddPlant,
@@ -33,9 +37,8 @@ export const LeafyHomeView: React.FC<LeafyHomeViewProps> = ({
   // Time-of-day dynamic greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning,';
-    if (hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
+    const prefix = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    return userDisplayName ? `${prefix}, ${userDisplayName}` : `${prefix},`;
   };
 
   // Compute upcoming reminders based on plant watering status
@@ -114,7 +117,7 @@ export const LeafyHomeView: React.FC<LeafyHomeViewProps> = ({
             style={{ position: 'relative', zIndex: 1 }}
           >
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80"
+              src={userAvatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80"}
               alt="Profile"
             />
           </button>

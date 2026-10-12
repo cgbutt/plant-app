@@ -20,6 +20,7 @@ export interface PlantPhoto {
 
 export interface JournalEntry {
   id: string;
+  user_id?: string;
   plant_id: string;
   date: string;
   title: string;

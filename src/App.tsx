@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Plant, JournalEntry, PlantPhoto } from './types/plant';
 import type { EncyclopediaPlant } from './types/encyclopedia';
+import type { UserProfile, AuthMode } from './types/auth';
 import { StorageService } from './services/storage';
 import { PlantEncyclopediaService } from './data/plantEncyclopedia';
+import { AuthService } from './services/auth';
+import { CloudStorageService } from './services/cloudStorage';
 
 // Leafy UI/UX Design System Components
 import { LeafyNavbar, type LeafyNavDestination } from './components/leafy/LeafyNavbar';
@@ -12,14 +15,15 @@ import { LeafyPlantBookView } from './components/leafy/LeafyPlantBookView';
 import { LeafyPlantDetailView } from './components/leafy/LeafyPlantDetailView';
 import { LeafyJournalView } from './components/leafy/LeafyJournalView';
 import { LeafyJournalEntryModal } from './components/leafy/LeafyJournalEntryModal';
+import { LeafyAuthModal } from './components/leafy/LeafyAuthModal';
+import { LeafyAccountModal } from './components/leafy/LeafyAccountModal';
+import { LeafySupabaseConfigModal } from './components/leafy/LeafySupabaseConfigModal';
 
 // Existing Feature Modals (Preserved)
 import { AddToGardenModal } from './components/plantbook/AddToGardenModal';
 import { AddEditPlantModal } from './components/AddEditPlantModal';
 import { AiAnalysisModal } from './components/AiAnalysisModal';
-import { SupabaseModal } from './components/SupabaseModal';
 import { LeftMenuBar } from './components/LeftMenuBar';
-import { AccountSettingsModal } from './components/AccountSettingsModal';
 import { ModelManagementModal } from './components/ModelManagementModal';
 import { PhotosModal } from './components/PhotosModal';
 
@@ -30,6 +34,12 @@ import './leafy-theme.css';
 type LeafyViewMode = 'home' | 'explore' | 'plantbook-detail' | 'journal';
 
 export const App: React.FC = () => {
+  // Authentication & Profile State
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [authModalMode, setAuthModalMode] = useState<AuthMode>('login');
+
+  // Plant & Journal Collection State
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<string>('');
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -43,7 +53,17 @@ export const App: React.FC = () => {
 
   // Modals state
   const [activeModal, setActiveModal] = useState<
-    'add' | 'edit' | 'journal-leafy' | 'photos' | 'models' | 'ai' | 'supabase' | 'account' | 'plus-choice' | null
+    | 'add'
+    | 'edit'
+    | 'journal-leafy'
+    | 'photos'
+    | 'models'
+    | 'ai'
+    | 'supabase-config'
+    | 'auth'
+    | 'account'
+    | 'plus-choice'
+    | null
   >(null);
   const [editingJournalEntry, setEditingJournalEntry] = useState<JournalEntry | null>(null);
 
@@ -57,6 +77,9 @@ export const App: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Check if unmigrated local data exists in localStorage
+  const [hasLocalDataToMigrate, setHasLocalDataToMigrate] = useState(false);
 
   // Synchronize URL hash with View Mode & Browser History
   const handleHashChange = useCallback(() => {
@@ -122,35 +145,75 @@ export const App: React.FC = () => {
     window.location.hash = `#/plant-book/${plant.id}`;
   };
 
-  // Initialize data
-  useEffect(() => {
-    const loadedPlants = StorageService.getPlants();
-    setPlants(loadedPlants);
-    if (loadedPlants.length > 0) {
-      setSelectedPlantId(loadedPlants[0].id);
+  // Load data based on authentication status (Cloud vs Local)
+  const refreshUserData = useCallback(async (user: any | null) => {
+    if (user) {
+      // 1. Authenticated user -> Load private cloud data from PostgreSQL
+      const [cloudPlants, cloudEntries, cloudPhotos, profile] = await Promise.all([
+        CloudStorageService.getPlants(user.id),
+        CloudStorageService.getJournalEntries(user.id),
+        CloudStorageService.getPhotos(user.id),
+        AuthService.getCurrentProfile()
+      ]);
+
+      setUserProfile(profile);
+
+      // Check if user has local plants that haven't been migrated yet
+      const localPlants = StorageService.getPlants();
+      if (cloudPlants.length === 0 && localPlants.length > 0) {
+        setHasLocalDataToMigrate(true);
+      } else {
+        setHasLocalDataToMigrate(false);
+      }
+
+      setPlants(cloudPlants.length > 0 ? cloudPlants : localPlants);
+      if (cloudPlants.length > 0) {
+        setSelectedPlantId(cloudPlants[0].id);
+      } else if (localPlants.length > 0) {
+        setSelectedPlantId(localPlants[0].id);
+      }
+
+      setJournalEntries(cloudEntries.length > 0 ? cloudEntries : StorageService.getJournalEntries());
+      setPhotos(cloudPhotos.length > 0 ? cloudPhotos : StorageService.getPhotos());
+    } else {
+      // 2. Guest user -> Load local preview storage
+      setUserProfile(null);
+      const localPlants = StorageService.getPlants();
+      setPlants(localPlants);
+      if (localPlants.length > 0) {
+        setSelectedPlantId(localPlants[0].id);
+      }
+      setJournalEntries(StorageService.getJournalEntries());
+      setPhotos(StorageService.getPhotos());
+      setHasLocalDataToMigrate(false);
     }
-    const allJournalEntries = StorageService.getJournalEntries();
-    setJournalEntries(allJournalEntries);
-    const allPhotos = StorageService.getPhotos();
-    setPhotos(allPhotos);
   }, []);
 
-  // Sync data when plant changes
-  const refreshData = () => {
-    const loadedPlants = StorageService.getPlants();
-    setPlants(loadedPlants);
-    const allJournalEntries = StorageService.getJournalEntries();
-    setJournalEntries(allJournalEntries);
-    const allPhotos = StorageService.getPhotos();
-    setPhotos(allPhotos);
-  };
+  // Initialize Auth & listen for auth state changes
+  useEffect(() => {
+    // Initial user fetch
+    AuthService.getCurrentUser().then((user) => {
+      setCurrentUser(user);
+      refreshUserData(user);
+    });
+
+    // Reactive subscription for login/logout/token refresh
+    const sub = AuthService.onAuthStateChange(async (_event, session) => {
+      const user = session?.user || null;
+      setCurrentUser(user);
+      refreshUserData(user);
+    });
+
+    return () => {
+      sub.unsubscribe();
+    };
+  }, [refreshUserData]);
 
   const currentPlant = plants.find((p) => p.id === selectedPlantId) || plants[0];
 
   // Plant card click from My Garden (Screen 01)
   const handleOpenGardenPlantDetail = (plant: Plant) => {
     setSelectedPlantId(plant.id);
-    // Find matching encyclopedia plant species
     const match =
       PlantEncyclopediaService.getAllPlants().find(
         (ep) =>
@@ -163,21 +226,59 @@ export const App: React.FC = () => {
   };
 
   // Plant added to garden handler
-  const handleGardenPlantAdded = (newPlant: Plant) => {
-    const updatedList = StorageService.getPlants();
-    setPlants(updatedList);
-    setSelectedPlantId(newPlant.id);
+  const handleGardenPlantAdded = async (newPlant: Plant) => {
+    if (currentUser) {
+      const saved = await CloudStorageService.savePlant(newPlant, currentUser.id);
+      if (saved) {
+        setPlants((prev) => [saved, ...prev]);
+        setSelectedPlantId(saved.id);
+      }
+    } else {
+      const updatedList = StorageService.getPlants();
+      setPlants(updatedList);
+      setSelectedPlantId(newPlant.id);
+    }
     setActiveGardenModalPlant(null);
     navigateToHome();
     showToast(`✓ Added ${newPlant.name} to your garden!`);
   };
 
-  // Plant saved from modal
-  const handlePlantSave = (savedPlant: Plant) => {
-    const updatedList = StorageService.getPlants();
-    setPlants(updatedList);
-    setSelectedPlantId(savedPlant.id);
+  // Plant saved from modal (add or edit)
+  const handlePlantSave = async (savedPlant: Plant) => {
+    if (currentUser) {
+      const saved = await CloudStorageService.savePlant(savedPlant, currentUser.id);
+      if (saved) {
+        setPlants((prev) => {
+          const idx = prev.findIndex((p) => p.id === saved.id);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = saved;
+            return next;
+          }
+          return [saved, ...prev];
+        });
+        setSelectedPlantId(saved.id);
+      }
+    } else {
+      const updatedList = StorageService.getPlants();
+      setPlants(updatedList);
+      setSelectedPlantId(savedPlant.id);
+    }
     showToast(`✓ Saved ${savedPlant.name}`);
+  };
+
+  // Local Garden Import to Cloud Handler
+  const handleMigrateLocalData = async () => {
+    if (!currentUser) return;
+    const localPlants = StorageService.getPlants();
+    const localEntries = StorageService.getJournalEntries();
+
+    showToast('Importing local plants to cloud account...');
+    const result = await CloudStorageService.migrateLocalGarden(currentUser.id, localPlants, localEntries);
+
+    setHasLocalDataToMigrate(false);
+    await refreshUserData(currentUser);
+    showToast(`🌱 Successfully imported ${result.importedPlants} plants & ${result.importedEntries} logs!`);
   };
 
   // Bottom Nav Selection handler
@@ -222,6 +323,8 @@ export const App: React.FC = () => {
         onOpenAi={() => setActiveModal('ai')}
         onOpen3dModels={() => setActiveModal('models')}
         onOpenProfile={() => setActiveModal('account')}
+        isLoggedIn={Boolean(currentUser)}
+        userAvatarUrl={userProfile?.avatar_url}
       />
 
       {/* Main Content Area */}
@@ -233,6 +336,8 @@ export const App: React.FC = () => {
             journalEntries={journalEntries}
             photos={photos}
             selectedPlantId={selectedPlantId}
+            userDisplayName={userProfile?.display_name}
+            userAvatarUrl={userProfile?.avatar_url}
             onSelectPlant={(p) => setSelectedPlantId(p.id)}
             onOpenPlantDetail={handleOpenGardenPlantDetail}
             onOpenAddPlant={() => setActiveModal('add')}
@@ -284,7 +389,7 @@ export const App: React.FC = () => {
               setEditingJournalEntry(entry);
               setActiveModal('journal-leafy');
             }}
-            onRefreshEntries={refreshData}
+            onRefreshEntries={() => refreshUserData(currentUser)}
             onOpenMenu={() => setIsMenuOpen(true)}
           />
         )}
@@ -355,8 +460,8 @@ export const App: React.FC = () => {
             setActiveModal(null);
             setEditingJournalEntry(null);
           }}
-          onSaved={() => {
-            refreshData();
+          onSaved={async () => {
+            await refreshUserData(currentUser);
             showToast('✓ Journal entry saved!');
           }}
         />
@@ -415,23 +520,49 @@ export const App: React.FC = () => {
           plant={currentPlant}
           photos={photos}
           onClose={() => setActiveModal(null)}
-          onRefresh={refreshData}
+          onRefresh={() => refreshUserData(currentUser)}
         />
       )}
 
-      {/* Supabase Database Sync Modal */}
-      {activeModal === 'supabase' && (
-        <SupabaseModal onClose={() => setActiveModal(null)} />
+      {/* Leafy Authentication Modal (Login / Sign Up / Reset Password) */}
+      {activeModal === 'auth' && (
+        <LeafyAuthModal
+          initialMode={authModalMode}
+          onClose={() => setActiveModal(null)}
+          onSuccess={() => {
+            refreshUserData(AuthService.getClient()?.auth.getUser());
+            showToast('🌱 Signed in successfully!');
+          }}
+          onOpenConfig={() => setActiveModal('supabase-config')}
+        />
       )}
 
-      {/* Account & Settings Modal */}
-      <AccountSettingsModal
+      {/* Account & Profile Settings Modal */}
+      <LeafyAccountModal
         isOpen={activeModal === 'account'}
         onClose={() => setActiveModal(null)}
+        onOpenAuth={() => {
+          setAuthModalMode('login');
+          setActiveModal('auth');
+        }}
+        onOpenConfig={() => setActiveModal('supabase-config')}
+        onMigrateLocalData={handleMigrateLocalData}
+        hasLocalDataToMigrate={hasLocalDataToMigrate}
         plantCount={plants.length}
         journalCount={journalEntries.length}
         photoCount={photos.length}
       />
+
+      {/* Supabase Connection & Credentials Modal */}
+      {activeModal === 'supabase-config' && (
+        <LeafySupabaseConfigModal
+          onClose={() => setActiveModal(null)}
+          onConnected={() => {
+            refreshUserData(currentUser);
+            showToast('🟢 Supabase project linked!');
+          }}
+        />
+      )}
 
       {/* Left Menu Drawer (Settings, DB, Phone Preview, 3D) */}
       <LeftMenuBar
@@ -441,7 +572,7 @@ export const App: React.FC = () => {
         onOpenAiConfig={() => setActiveModal('ai')}
         onOpen3dModels={() => setActiveModal('models')}
         onOpenEditPlant={() => setActiveModal('edit')}
-        onOpenDatabase={() => setActiveModal('supabase')}
+        onOpenDatabase={() => setActiveModal('supabase-config')}
         onOpenSettings={() => setActiveModal('account')}
         onOpenAccount={() => setActiveModal('account')}
         isPhonePreview={isPhonePreview}
