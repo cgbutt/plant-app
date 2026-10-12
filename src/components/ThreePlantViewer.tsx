@@ -265,12 +265,111 @@ function FiddleLeafFoliage({ stage }: { stage: GrowthStage }) {
 }
 
 export const ThreePlantViewer: React.FC<ThreePlantViewerProps> = ({ modelUrl, species, stage }) => {
+  const controlsRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isIntentLockedRef = useRef<boolean>(false);
+
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 860 || !!document.querySelector('.phone-mode-active');
+  });
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const isNarrow = window.innerWidth <= 860;
+      const isSimulated = !!document.querySelector('.phone-mode-active');
+      setIsMobile(isNarrow || isSimulated);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Set touchAction: 'pan-y' and manage touch scroll intent
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (controlsRef.current?.domElement) {
+      controlsRef.current.domElement.style.touchAction = 'pan-y';
+    }
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        isIntentLockedRef.current = false;
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!touchStartRef.current || e.touches.length !== 1) return;
+
+      const dx = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
+      const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
+
+      // Distinguish vertical scroll vs horizontal model rotation
+      if (!isIntentLockedRef.current && (dx > 7 || dy > 7)) {
+        isIntentLockedRef.current = true;
+        if (dy > dx) {
+          // User is scrolling the page vertically: disable OrbitControls to yield to browser
+          if (controlsRef.current) {
+            controlsRef.current.enabled = false;
+          }
+        } else {
+          // User is rotating horizontally: keep OrbitControls enabled
+          if (controlsRef.current) {
+            controlsRef.current.enabled = true;
+          }
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchStartRef.current = null;
+      isIntentLockedRef.current = false;
+      if (controlsRef.current) {
+        controlsRef.current.enabled = true;
+      }
+    };
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchmove', handleTouchMove, { passive: true });
+    el.addEventListener('touchend', handleTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+      el.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [isMobile]);
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        touchAction: 'pan-y'
+      }}
+    >
       <Canvas
         shadows
         camera={{ position: [0, 0, 4.0], fov: 42 }}
-        style={{ background: '#d5dbd5', width: '100%', height: '100%' }}
+        style={{
+          background: '#d5dbd5',
+          width: '100%',
+          height: '100%',
+          touchAction: 'pan-y'
+        }}
         gl={{ antialias: true, preserveDrawingBuffer: true }}
       >
         {/* Isolated Studio Lighting Setup */}
@@ -315,10 +414,11 @@ export const ThreePlantViewer: React.FC<ThreePlantViewerProps> = ({ modelUrl, sp
 
         {/* Studio Orbit Controls centered at [0, 0, 0] */}
         <OrbitControls
+          ref={controlsRef}
           makeDefault
           target={[0, 0, 0]}
           enablePan={false}
-          enableZoom={true}
+          enableZoom={!isMobile}
           minDistance={2.0}
           maxDistance={7.0}
           minPolarAngle={Math.PI / 6}

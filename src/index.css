@@ -1509,17 +1509,35 @@ button, input, select, textarea {
    ========================================================================== */
 
 @media (max-width: 860px) {
-  html, body, #root {
-    overflow-y: auto !important;
+  html {
+    height: 100% !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: auto !important;
+    scroll-behavior: smooth !important;
+  }
+
+  body {
+    min-height: 100% !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
     background-color: #010402 !important;
+  }
+
+  #root {
+    min-height: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
   }
 
   .asper-viewport {
     height: auto !important;
     min-height: 100vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     background: 
       radial-gradient(ellipse at 50% 0%, rgba(24, 72, 46, 0.65) 0%, rgba(12, 36, 23, 0.5) 30%, rgba(4, 15, 9, 0.85) 60%, #010402 100%),
       linear-gradient(180deg, #103320 0%, #081d12 30%, #030a06 65%, #000000 100%) !important;
@@ -1545,11 +1563,13 @@ button, input, select, textarea {
     padding: 16px 16px 48px 16px !important;
     gap: 22px !important;
     height: auto !important;
+    min-height: auto !important;
     max-width: 440px !important;
     margin: 0 auto !important;
     position: relative !important;
     z-index: 1 !important;
     background: transparent !important;
+    overflow: visible !important;
   }
 
   /* 1. 3D MODEL CARD AT VERY TOP */
@@ -1566,6 +1586,13 @@ button, input, select, textarea {
     background-color: #d5dbd5 !important;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
     position: relative !important;
+    touch-action: pan-y !important;
+  }
+
+  .asper-3d-card canvas,
+  .photo-panel-container,
+  .photo-main-display {
+    touch-action: pan-y !important;
   }
 
   /* Frosted Glass top controls */
@@ -1807,11 +1834,21 @@ button, input, select, textarea {
   gap: 22px !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  scroll-behavior: smooth !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
   box-sizing: border-box !important;
   position: relative !important;
   z-index: 1 !important;
+}
+
+.asper-viewport.phone-mode-active .asper-3d-card,
+.asper-viewport.phone-mode-active .asper-3d-card canvas,
+.asper-viewport.phone-mode-active .photo-panel-container,
+.asper-viewport.phone-mode-active .photo-main-display {
+  touch-action: pan-y !important;
 }
 
 .asper-viewport.phone-mode-active .asper-layout-container::-webkit-scrollbar {
