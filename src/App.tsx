@@ -1,136 +1,93 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { Plant, GrowthStage, JournalEntry, PlantPhoto } from './types/plant';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { Plant, JournalEntry, PlantPhoto } from './types/plant';
 import type { EncyclopediaPlant } from './types/encyclopedia';
 import { StorageService } from './services/storage';
 import { PlantEncyclopediaService } from './data/plantEncyclopedia';
-import { LeftPanel } from './components/LeftPanel';
-import { ThreePlantViewer } from './components/ThreePlantViewer';
-import { StageSwitcher } from './components/StageSwitcher';
-import { RightPhotoViewer } from './components/RightPhotoViewer';
-import { JournalModal } from './components/JournalModal';
-import { PhotosModal } from './components/PhotosModal';
-import { ModelManagementModal } from './components/ModelManagementModal';
+
+// Leafy UI/UX Design System Components
+import { LeafyNavbar, type LeafyNavDestination } from './components/leafy/LeafyNavbar';
+import { LeafyBottomNav } from './components/leafy/LeafyBottomNav';
+import { LeafyHomeView } from './components/leafy/LeafyHomeView';
+import { LeafyPlantBookView } from './components/leafy/LeafyPlantBookView';
+import { LeafyPlantDetailView } from './components/leafy/LeafyPlantDetailView';
+import { LeafyJournalView } from './components/leafy/LeafyJournalView';
+import { LeafyJournalEntryModal } from './components/leafy/LeafyJournalEntryModal';
+
+// Existing Feature Modals (Preserved)
+import { AddToGardenModal } from './components/plantbook/AddToGardenModal';
 import { AddEditPlantModal } from './components/AddEditPlantModal';
 import { AiAnalysisModal } from './components/AiAnalysisModal';
 import { SupabaseModal } from './components/SupabaseModal';
 import { LeftMenuBar } from './components/LeftMenuBar';
 import { AccountSettingsModal } from './components/AccountSettingsModal';
-
-// Plant Book Encyclopedia Components
-import { PlantBookMain } from './components/plantbook/PlantBookMain';
-import { PlantDetailView } from './components/plantbook/PlantDetailView';
-import { AddToGardenModal } from './components/plantbook/AddToGardenModal';
-import { BottomNavBar, type NavTab } from './components/plantbook/BottomNavBar';
+import { ModelManagementModal } from './components/ModelManagementModal';
+import { PhotosModal } from './components/PhotosModal';
 
 import './index.css';
 import './plantbook.css';
+import './leafy-theme.css';
 
-type AppViewMode = 'journal' | 'plantbook' | 'plantbook-detail';
+type LeafyViewMode = 'home' | 'explore' | 'plantbook-detail' | 'journal';
 
 export const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<string>('');
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [photos, setPhotos] = useState<PlantPhoto[]>([]);
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string>('');
 
-  // Primary View Mode (Journal vs Plant Book vs Detail)
-  const [viewMode, setViewMode] = useState<AppViewMode>('journal');
+  // Navigation & View Mode
+  const [viewMode, setViewMode] = useState<LeafyViewMode>('home');
+  const [previousViewMode, setPreviousViewMode] = useState<LeafyViewMode>('home');
   const [selectedEncyclopediaPlant, setSelectedEncyclopediaPlant] = useState<EncyclopediaPlant | null>(null);
   const [activeGardenModalPlant, setActiveGardenModalPlant] = useState<EncyclopediaPlant | null>(null);
 
-  // Left Menu Bar Drawer state
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Modals state
+  const [activeModal, setActiveModal] = useState<
+    'add' | 'edit' | 'journal-leafy' | 'photos' | 'models' | 'ai' | 'supabase' | 'account' | 'plus-choice' | null
+  >(null);
+  const [editingJournalEntry, setEditingJournalEntry] = useState<JournalEntry | null>(null);
 
-  // Right Panel Toggle: '3d' or 'photos'
-  const [rightViewMode, setRightViewMode] = useState<'3d' | 'photos'>('3d');
-  // Phone simulation view mode
+  // Left Menu Bar Drawer state & Phone preview
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPhonePreview, setIsPhonePreview] = useState(false);
 
-  // Active Bottom Nav Tab
-  const [currentNavTab, setCurrentNavTab] = useState<NavTab>('home');
-
-  // Modal active state
-  const [activeModal, setActiveModal] = useState<
-    'add' | 'edit' | 'journal' | 'photos' | 'models' | 'ai' | 'supabase' | 'account' | null
-  >(null);
-
-  // Success Toast state
+  // Toast notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
-
-  // Idle detection for 3D card & photo viewer controls
-  const [isCardIdle, setIsCardIdle] = useState(false);
-  const [isControlsLockedOpen, setIsControlsLockedOpen] = useState(false);
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const resetCardIdleTimer = useCallback(() => {
-    setIsCardIdle(false);
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-    }
-    if (!isControlsLockedOpen) {
-      idleTimerRef.current = setTimeout(() => {
-        setIsCardIdle(true);
-      }, 3000); // Hide controls after 3s of inactivity
-    }
-  }, [isControlsLockedOpen]);
-
-  useEffect(() => {
-    resetCardIdleTimer();
-
-    const handleUserActivity = () => {
-      resetCardIdleTimer();
-    };
-
-    window.addEventListener('mousemove', handleUserActivity, { passive: true });
-    window.addEventListener('pointermove', handleUserActivity, { passive: true });
-    window.addEventListener('pointerdown', handleUserActivity, { passive: true });
-    window.addEventListener('touchstart', handleUserActivity, { passive: true });
-    window.addEventListener('wheel', handleUserActivity, { passive: true });
-
-    return () => {
-      window.removeEventListener('mousemove', handleUserActivity);
-      window.removeEventListener('pointermove', handleUserActivity);
-      window.removeEventListener('pointerdown', handleUserActivity);
-      window.removeEventListener('touchstart', handleUserActivity);
-      window.removeEventListener('wheel', handleUserActivity);
-      if (idleTimerRef.current) {
-        clearTimeout(idleTimerRef.current);
-      }
-    };
-  }, [resetCardIdleTimer]);
 
   // Synchronize URL hash with View Mode & Browser History
   const handleHashChange = useCallback(() => {
     const rawHash = window.location.hash || '';
     const hash = rawHash.toLowerCase();
 
-    if (hash.startsWith('#/plant-book/') || hash.startsWith('#/book/')) {
-      const slug = hash.replace(/^#\/(plant-book|book)\//, '').trim();
+    if (hash.startsWith('#/plant-book/') || hash.startsWith('#/book/') || hash.startsWith('#/plant/')) {
+      const slug = hash.replace(/^#\/(plant-book|book|plant)\//, '').trim();
       const plant = PlantEncyclopediaService.getPlantById(slug);
       if (plant) {
         setSelectedEncyclopediaPlant(plant);
         setViewMode('plantbook-detail');
-        setCurrentNavTab('plantbook');
         return;
       }
     }
 
-    if (hash === '#/plant-book' || hash === '#/book') {
-      setViewMode('plantbook');
+    if (hash === '#/plant-book' || hash === '#/explore' || hash === '#/book') {
+      setViewMode('explore');
       setSelectedEncyclopediaPlant(null);
-      setCurrentNavTab('plantbook');
       return;
     }
 
-    // Default to journal view
-    setViewMode('journal');
-    setCurrentNavTab('home');
+    if (hash === '#/journal') {
+      setViewMode('journal');
+      setSelectedEncyclopediaPlant(null);
+      return;
+    }
+
+    // Default to Home (My Garden)
+    setViewMode('home');
+    setSelectedEncyclopediaPlant(null);
   }, []);
 
   useEffect(() => {
@@ -139,17 +96,30 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [handleHashChange]);
 
-  // Navigation Helpers
-  const navigateToPlantBook = () => {
-    window.location.hash = '#/plant-book';
+  // Navigation helpers
+  const navigateToHome = () => {
+    setViewMode('home');
+    setSelectedEncyclopediaPlant(null);
+    window.location.hash = '#/';
   };
 
-  const navigateToPlantDetail = (plant: EncyclopediaPlant) => {
-    window.location.hash = `#/plant-book/${plant.id}`;
+  const navigateToExplore = () => {
+    setViewMode('explore');
+    setSelectedEncyclopediaPlant(null);
+    window.location.hash = '#/explore';
   };
 
   const navigateToJournal = () => {
-    window.location.hash = '';
+    setViewMode('journal');
+    setSelectedEncyclopediaPlant(null);
+    window.location.hash = '#/journal';
+  };
+
+  const navigateToPlantDetail = (plant: EncyclopediaPlant) => {
+    setPreviousViewMode(viewMode);
+    setSelectedEncyclopediaPlant(plant);
+    setViewMode('plantbook-detail');
+    window.location.hash = `#/plant-book/${plant.id}`;
   };
 
   // Initialize data
@@ -159,217 +129,240 @@ export const App: React.FC = () => {
     if (loadedPlants.length > 0) {
       setSelectedPlantId(loadedPlants[0].id);
     }
+    const allJournalEntries = StorageService.getJournalEntries();
+    setJournalEntries(allJournalEntries);
+    const allPhotos = StorageService.getPhotos();
+    setPhotos(allPhotos);
   }, []);
 
-  // Sync journal and photos when selected plant changes
-  useEffect(() => {
-    if (selectedPlantId) {
-      const plantEntries = StorageService.getJournalEntries(selectedPlantId);
-      const plantPhotos = StorageService.getPhotos(selectedPlantId);
-      setJournalEntries(plantEntries);
-      setPhotos(plantPhotos);
-      if (plantPhotos.length > 0) {
-        setSelectedPhotoId(plantPhotos[0].id);
-      }
-    }
-  }, [selectedPlantId]);
+  // Sync data when plant changes
+  const refreshData = () => {
+    const loadedPlants = StorageService.getPlants();
+    setPlants(loadedPlants);
+    const allJournalEntries = StorageService.getJournalEntries();
+    setJournalEntries(allJournalEntries);
+    const allPhotos = StorageService.getPhotos();
+    setPhotos(allPhotos);
+  };
 
   const currentPlant = plants.find((p) => p.id === selectedPlantId) || plants[0];
-  const activePhoto = photos.find((p) => p.id === selectedPhotoId) || photos[0];
 
-  if (!currentPlant) {
-    return (
-      <div className="app-frame loading-frame">
-        <div>INITIALIZING ASPER PLANT JOURNAL & ENCYCLOPEDIA...</div>
-      </div>
-    );
-  }
+  // Plant card click from My Garden (Screen 01)
+  const handleOpenGardenPlantDetail = (plant: Plant) => {
+    setSelectedPlantId(plant.id);
+    // Find matching encyclopedia plant species
+    const match =
+      PlantEncyclopediaService.getAllPlants().find(
+        (ep) =>
+          ep.common_name.toLowerCase().includes(plant.name.toLowerCase()) ||
+          plant.species.toLowerCase().includes(ep.common_name.toLowerCase()) ||
+          ep.scientific_name.toLowerCase().includes(plant.species.toLowerCase())
+      ) || PlantEncyclopediaService.getAllPlants()[0];
 
-  // Active 3D model for current stage
-  const currentStage: GrowthStage = currentPlant.current_stage || 1;
-  const currentModelUrl =
-    currentStage === 1
-      ? currentPlant.stage1_model
-      : currentStage === 2
-      ? currentPlant.stage2_model
-      : currentPlant.stage3_model;
-
-  const handleStageChange = (newStage: GrowthStage) => {
-    const stageLabel =
-      newStage === 1 ? '01 / Young' : newStage === 2 ? '02 / Growing' : '03 / Mature';
-    const updated: Plant = {
-      ...currentPlant,
-      current_stage: newStage,
-      growth_stage_label: stageLabel
-    };
-    const updatedList = StorageService.updatePlant(updated);
-    setPlants(updatedList);
+    navigateToPlantDetail(match);
   };
 
-  const handlePlantSave = (savedPlant: Plant) => {
-    const updatedList = StorageService.getPlants();
-    setPlants(updatedList);
-    setSelectedPlantId(savedPlant.id);
-  };
-
-  const handleRefreshData = () => {
-    if (selectedPlantId) {
-      const plantEntries = StorageService.getJournalEntries(selectedPlantId);
-      const plantPhotos = StorageService.getPhotos(selectedPlantId);
-      setJournalEntries(plantEntries);
-      setPhotos(plantPhotos);
-    }
-  };
-
-  // Handle adding plant from encyclopedia into personal garden
+  // Plant added to garden handler
   const handleGardenPlantAdded = (newPlant: Plant) => {
     const updatedList = StorageService.getPlants();
     setPlants(updatedList);
     setSelectedPlantId(newPlant.id);
     setActiveGardenModalPlant(null);
-    navigateToJournal();
+    navigateToHome();
     showToast(`✓ Added ${newPlant.name} to your garden!`);
   };
 
-  // Bottom Navigation Tab handler
-  const handleBottomNavSelect = (tab: NavTab) => {
-    setCurrentNavTab(tab);
+  // Plant saved from modal
+  const handlePlantSave = (savedPlant: Plant) => {
+    const updatedList = StorageService.getPlants();
+    setPlants(updatedList);
+    setSelectedPlantId(savedPlant.id);
+    showToast(`✓ Saved ${savedPlant.name}`);
+  };
+
+  // Bottom Nav Selection handler
+  const handleBottomNavSelect = (tab: LeafyNavDestination | 'profile') => {
     if (tab === 'home') {
+      navigateToHome();
+    } else if (tab === 'explore') {
+      navigateToExplore();
+    } else if (tab === 'journal') {
       navigateToJournal();
-    } else if (tab === 'plantbook') {
-      navigateToPlantBook();
-    } else if (tab === 'myplants') {
-      navigateToJournal();
-      setIsMenuOpen(true);
     } else if (tab === 'profile') {
       setActiveModal('account');
     }
   };
 
+  // Map active destination for desktop navbar and mobile bottom nav
+  const activeNavDest: LeafyNavDestination =
+    viewMode === 'explore' || viewMode === 'plantbook-detail'
+      ? 'explore'
+      : viewMode === 'journal'
+      ? 'journal'
+      : 'home';
+
   return (
-    <div className={`asper-viewport ${isPhonePreview ? 'phone-mode-active' : ''}`}>
+    <div className={`leafy-app-shell ${isPhonePreview ? 'phone-mode-active' : ''}`}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="plant-detail-toast">
+        <div className="leafy-toast-notice">
           {toastMessage}
         </div>
       )}
 
-      {/* VIEW MODE 1: Plant Book Main Encyclopedia Page */}
-      {viewMode === 'plantbook' && (
-        <PlantBookMain
-          onSelectPlant={navigateToPlantDetail}
-          onOpenMenu={() => setIsMenuOpen(true)}
-          onReturnToJournal={navigateToJournal}
-          isPhonePreview={isPhonePreview}
-        />
-      )}
+      {/* Desktop Top Navigation Bar */}
+      <LeafyNavbar
+        currentTab={activeNavDest}
+        onSelectTab={(tab) => {
+          if (tab === 'home') navigateToHome();
+          else if (tab === 'explore') navigateToExplore();
+          else if (tab === 'journal') navigateToJournal();
+        }}
+        onOpenAddPlant={() => setActiveModal('add')}
+        onOpenAi={() => setActiveModal('ai')}
+        onOpen3dModels={() => setActiveModal('models')}
+        onOpenProfile={() => setActiveModal('account')}
+      />
 
-      {/* VIEW MODE 2: Individual Plant Information Page */}
-      {viewMode === 'plantbook-detail' && selectedEncyclopediaPlant && (
-        <PlantDetailView
-          plant={selectedEncyclopediaPlant}
-          onBack={navigateToPlantBook}
-          onAddToGarden={(p) => setActiveGardenModalPlant(p)}
-        />
-      )}
+      {/* Main Content Area */}
+      <main className="leafy-main-content">
+        {/* SCREEN 1: Home / My Garden */}
+        {viewMode === 'home' && (
+          <LeafyHomeView
+            plants={plants}
+            journalEntries={journalEntries}
+            photos={photos}
+            selectedPlantId={selectedPlantId}
+            onSelectPlant={(p) => setSelectedPlantId(p.id)}
+            onOpenPlantDetail={handleOpenGardenPlantDetail}
+            onOpenAddPlant={() => setActiveModal('add')}
+            onOpenJournal={navigateToJournal}
+            onOpenExplore={navigateToExplore}
+            onOpenMenu={() => setIsMenuOpen(true)}
+            onOpenProfile={() => setActiveModal('account')}
+            onOpenAi={() => setActiveModal('ai')}
+          />
+        )}
 
-      {/* VIEW MODE 3: Classic 3D Botanical Plant Journal */}
-      {viewMode === 'journal' && (
-        <div className="asper-layout-container">
-          {/* LEFT COLUMN: Data, Metrics Grid & Interactive Plant Doc */}
-          <div className="asper-left-column">
-            <LeftPanel
-              plant={currentPlant}
-              plants={plants}
-              journalEntries={journalEntries}
-              photos={photos}
-              activePhoto={activePhoto}
-              onSelectPlant={(p) => setSelectedPlantId(p.id)}
-              onOpenAddPlant={() => setActiveModal('add')}
-              onOpenEditPlant={() => setActiveModal('edit')}
-              onOpenJournal={() => setActiveModal('journal')}
-              onOpenPhotos={() => setActiveModal('photos')}
-              onOpenMenu={() => setIsMenuOpen(true)}
-              onOpenPlantBook={navigateToPlantBook}
-              onStageChange={handleStageChange}
-              onPlantUpdated={handlePlantSave}
-            />
-          </div>
+        {/* SCREEN 2: Plant Book / Encyclopedia */}
+        {viewMode === 'explore' && (
+          <LeafyPlantBookView
+            onSelectPlant={navigateToPlantDetail}
+            onOpenMenu={() => setIsMenuOpen(true)}
+            isPhonePreview={isPhonePreview}
+          />
+        )}
 
-          {/* RIGHT COLUMN: Toggleable Large Rounded Container (3D Model / Photos) */}
-          <div className="asper-right-column">
-            <div
-              className={`asper-3d-card ${isCardIdle && !isControlsLockedOpen ? 'viewer-idle' : ''}`}
-              onMouseMove={resetCardIdleTimer}
-              onMouseEnter={resetCardIdleTimer}
-              onTouchStart={resetCardIdleTimer}
-              onTouchMove={resetCardIdleTimer}
-            >
-              {/* Top Switcher: 3D Model vs Photos */}
-              <div className="viewer-mode-header">
-                <div className="viewer-tabs">
-                  <button
-                    className={`viewer-tab-btn ${rightViewMode === '3d' ? 'active' : ''}`}
-                    onClick={() => setRightViewMode('3d')}
-                  >
-                    3D MODEL
-                  </button>
-                  <button
-                    className={`viewer-tab-btn ${rightViewMode === 'photos' ? 'active' : ''}`}
-                    onClick={() => setRightViewMode('photos')}
-                  >
-                    YOUR PHOTOS ({photos.length})
-                  </button>
-                </div>
-              </div>
+        {/* SCREEN 3: Plant Detail / Care Screen */}
+        {viewMode === 'plantbook-detail' && selectedEncyclopediaPlant && (
+          <LeafyPlantDetailView
+            plant={selectedEncyclopediaPlant}
+            userPlant={currentPlant}
+            journalEntries={journalEntries.filter(
+              (e) => currentPlant && e.plant_id === currentPlant.id
+            )}
+            onBack={() => {
+              if (previousViewMode === 'home') navigateToHome();
+              else navigateToExplore();
+            }}
+            onAddToGarden={(p) => setActiveGardenModalPlant(p)}
+            onOpenAi={() => setActiveModal('ai')}
+          />
+        )}
 
-              {/* Mode 1: 3D Model View */}
-              {rightViewMode === '3d' && (
-                <>
-                  <ThreePlantViewer
-                    modelUrl={currentModelUrl}
-                    species={currentPlant.species}
-                    stage={currentStage}
-                  />
+        {/* SCREEN 4: Plant Journal */}
+        {viewMode === 'journal' && (
+          <LeafyJournalView
+            journalEntries={journalEntries}
+            plants={plants}
+            photos={photos}
+            onOpenNewEntry={() => {
+              setEditingJournalEntry(null);
+              setActiveModal('journal-leafy');
+            }}
+            onEditEntry={(entry) => {
+              setEditingJournalEntry(entry);
+              setActiveModal('journal-leafy');
+            }}
+            onRefreshEntries={refreshData}
+            onOpenMenu={() => setIsMenuOpen(true)}
+          />
+        )}
+      </main>
 
-                  <StageSwitcher
-                    currentStage={currentStage}
-                    onStageChange={handleStageChange}
-                    hasCustomModels={{
-                      stage1: Boolean(currentPlant.stage1_model),
-                      stage2: Boolean(currentPlant.stage2_model),
-                      stage3: Boolean(currentPlant.stage3_model)
-                    }}
-                  />
-                </>
-              )}
+      {/* Mobile Bottom Navigation Bar (Matching Reference Image) */}
+      <LeafyBottomNav
+        currentTab={activeNavDest}
+        onSelectTab={handleBottomNavSelect}
+        onOpenAddAction={() => setActiveModal('plus-choice')}
+      />
 
-              {/* Mode 2: Real Photos View */}
-              {rightViewMode === 'photos' && (
-                <RightPhotoViewer
-                  plant={currentPlant}
-                  photos={photos}
-                  selectedPhotoId={selectedPhotoId}
-                  onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
-                  onRefreshPhotos={handleRefreshData}
-                  onOpenGallery={() => setActiveModal('photos')}
-                  onControlsActiveChange={(active) => setIsControlsLockedOpen(active)}
-                />
-              )}
+      {/* Elevated Plus Button Choice Modal */}
+      {activeModal === 'plus-choice' && (
+        <div className="modal-overlay" onClick={() => setActiveModal(null)}>
+          <div
+            className="modal-card"
+            style={{
+              background: '#ffffff',
+              borderRadius: 'var(--radius-xl)',
+              maxWidth: '380px',
+              width: '90%',
+              padding: '24px',
+              textAlign: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
+              Add to Garden
+            </h3>
+            <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+              What would you like to document today?
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button
+                className="leafy-btn-primary"
+                style={{ width: '100%' }}
+                onClick={() => {
+                  setActiveModal('add');
+                }}
+              >
+                🌱 + Add New Plant
+              </button>
+
+              <button
+                className="leafy-btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => {
+                  setEditingJournalEntry(null);
+                  setActiveModal('journal-leafy');
+                }}
+              >
+                📝 + New Journal Entry
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Floating Bottom Navigation Bar (Visible on mobile screens & phone preview mode) */}
-      <BottomNavBar
-        currentTab={currentNavTab}
-        onSelectTab={handleBottomNavSelect}
-        onAddClick={() => setActiveModal('add')}
-      />
+      {/* Leafy Journal Entry Modal (Create / Edit) */}
+      {activeModal === 'journal-leafy' && (
+        <LeafyJournalEntryModal
+          plants={plants}
+          currentPlant={currentPlant}
+          editingEntry={editingJournalEntry}
+          onClose={() => {
+            setActiveModal(null);
+            setEditingJournalEntry(null);
+          }}
+          onSaved={() => {
+            refreshData();
+            showToast('✓ Journal entry saved!');
+          }}
+        />
+      )}
 
-      {/* ADD TO MY GARDEN PREFILL MODAL */}
+      {/* Add To Garden Prefill Modal */}
       {activeGardenModalPlant && (
         <AddToGardenModal
           plant={activeGardenModalPlant}
@@ -378,33 +371,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* MODALS */}
-      {activeModal === 'journal' && (
-        <JournalModal
-          plant={currentPlant}
-          entries={journalEntries}
-          onClose={() => setActiveModal(null)}
-          onRefresh={handleRefreshData}
-        />
-      )}
-
-      {activeModal === 'photos' && (
-        <PhotosModal
-          plant={currentPlant}
-          photos={photos}
-          onClose={() => setActiveModal(null)}
-          onRefresh={handleRefreshData}
-        />
-      )}
-
-      {activeModal === 'models' && (
-        <ModelManagementModal
-          plant={currentPlant}
-          onClose={() => setActiveModal(null)}
-          onPlantUpdated={handlePlantSave}
-        />
-      )}
-
+      {/* Add Plant Modal */}
       {activeModal === 'add' && (
         <AddEditPlantModal
           plant={null}
@@ -413,7 +380,8 @@ export const App: React.FC = () => {
         />
       )}
 
-      {activeModal === 'edit' && (
+      {/* Edit Plant Modal */}
+      {activeModal === 'edit' && currentPlant && (
         <AddEditPlantModal
           plant={currentPlant}
           onClose={() => setActiveModal(null)}
@@ -421,7 +389,8 @@ export const App: React.FC = () => {
         />
       )}
 
-      {activeModal === 'ai' && (
+      {/* AI Diagnosis Modal */}
+      {activeModal === 'ai' && currentPlant && (
         <AiAnalysisModal
           plant={currentPlant}
           journalEntries={journalEntries}
@@ -431,15 +400,44 @@ export const App: React.FC = () => {
         />
       )}
 
+      {/* 3D Model Management Modal */}
+      {activeModal === 'models' && currentPlant && (
+        <ModelManagementModal
+          plant={currentPlant}
+          onClose={() => setActiveModal(null)}
+          onPlantUpdated={handlePlantSave}
+        />
+      )}
+
+      {/* Photos Modal */}
+      {activeModal === 'photos' && currentPlant && (
+        <PhotosModal
+          plant={currentPlant}
+          photos={photos}
+          onClose={() => setActiveModal(null)}
+          onRefresh={refreshData}
+        />
+      )}
+
+      {/* Supabase Database Sync Modal */}
       {activeModal === 'supabase' && (
         <SupabaseModal onClose={() => setActiveModal(null)} />
       )}
 
-      {/* LEFT MENU BAR DRAWER */}
+      {/* Account & Settings Modal */}
+      <AccountSettingsModal
+        isOpen={activeModal === 'account'}
+        onClose={() => setActiveModal(null)}
+        plantCount={plants.length}
+        journalCount={journalEntries.length}
+        photoCount={photos.length}
+      />
+
+      {/* Left Menu Drawer (Settings, DB, Phone Preview, 3D) */}
       <LeftMenuBar
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        onOpenPlantBook={navigateToPlantBook}
+        onOpenPlantBook={navigateToExplore}
         onOpenAiConfig={() => setActiveModal('ai')}
         onOpen3dModels={() => setActiveModal('models')}
         onOpenEditPlant={() => setActiveModal('edit')}
@@ -448,16 +446,7 @@ export const App: React.FC = () => {
         onOpenAccount={() => setActiveModal('account')}
         isPhonePreview={isPhonePreview}
         onTogglePhonePreview={() => setIsPhonePreview(!isPhonePreview)}
-        plantName={currentPlant.name || 'Monstera'}
-      />
-
-      {/* ACCOUNT & SETTINGS MODAL */}
-      <AccountSettingsModal
-        isOpen={activeModal === 'account'}
-        onClose={() => setActiveModal(null)}
-        plantCount={plants.length}
-        journalCount={journalEntries.length}
-        photoCount={photos.length}
+        plantName={currentPlant?.name || 'Monstera'}
       />
     </div>
   );

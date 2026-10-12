@@ -148,6 +148,26 @@ export class StorageService {
     return newEntry;
   }
 
+  static updateJournalEntry(updatedEntry: JournalEntry): JournalEntry[] {
+    const entries = this.getJournalEntries();
+    const index = entries.findIndex(e => e.id === updatedEntry.id);
+    let updated: JournalEntry[];
+    if (index >= 0) {
+      updated = [...entries];
+      updated[index] = updatedEntry;
+    } else {
+      updated = [updatedEntry, ...entries];
+    }
+    localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(updated));
+    return updated;
+  }
+
+  static deleteJournalEntry(entryId: string): JournalEntry[] {
+    const entries = this.getJournalEntries().filter(e => e.id !== entryId);
+    localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(entries));
+    return entries;
+  }
+
   static getPhotos(plantId?: string): PlantPhoto[] {
     const raw = localStorage.getItem(STORAGE_KEYS.PHOTOS);
     let photos: PlantPhoto[] = [];
