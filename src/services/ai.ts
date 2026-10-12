@@ -103,11 +103,13 @@ async function callRealGeminiApi(
   latestPhoto?: PlantPhoto,
   journalEntries: JournalEntry[] = []
 ): Promise<AiAnalysisOutput> {
+  // Use Gemini 3.x and active fast models (gemini-flash-lite-latest, gemini-3.8-flash, etc.)
   const modelsToTry = [
     'gemini-flash-lite-latest',
-    'gemini-flash-latest',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
     'gemini-2.5-flash-lite',
-    'gemini-pro-latest'
+    'gemini-flash-latest'
   ];
 
   const promptText = `You are an expert botanical scientist and plant pathologist.
@@ -180,7 +182,7 @@ Return ONLY a valid JSON object matching this exact structure:
         } else if (response.status === 429) {
           throw new Error('Gemini API rate limit reached (429). Please wait a few seconds and try again.');
         } else if (response.status === 404 || response.status === 503) {
-          // Model unavailable or temporary spike, try next model in pool
+          // Model unavailable, retired, or high demand spike — try next model
           throw new Error(`Model ${model} status ${response.status}: ${errText}`);
         }
         throw new Error(`Gemini API Error (${response.status}): ${errText}`);
@@ -223,8 +225,11 @@ Return ONLY a valid JSON object matching this exact structure:
       };
     } catch (err: any) {
       lastError = err;
-      // If error is 404 or 503, loop will try the next fallback model. Otherwise throw immediately.
-      const isRetryable = err?.message?.includes('404') || err?.message?.includes('503');
+      const isRetryable =
+        err?.message?.includes('404') ||
+        err?.message?.includes('503') ||
+        err?.message?.includes('no longer available') ||
+        err?.message?.includes('not found');
       if (!isRetryable) {
         throw err;
       }
