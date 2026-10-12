@@ -5,4 +5,5 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/plant-app/' : '/',
   plugins: [react()],
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
 })
