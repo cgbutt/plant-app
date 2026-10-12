@@ -4,15 +4,19 @@ const GEMINI_API_KEY_STORAGE = 'plant_app_gemini_api_key';
 
 export class AiService {
   static getApiKey(): string {
-    return (
+    const key =
       localStorage.getItem(GEMINI_API_KEY_STORAGE) ||
       import.meta.env.VITE_GEMINI_API_KEY ||
-      ''
-    );
+      '';
+    return key.trim();
   }
 
   static saveApiKey(key: string): void {
     localStorage.setItem(GEMINI_API_KEY_STORAGE, key.trim());
+  }
+
+  static clearApiKey(): void {
+    localStorage.removeItem(GEMINI_API_KEY_STORAGE);
   }
 
   static hasApiKey(): boolean {
@@ -29,14 +33,10 @@ export async function analyzePlant(
 
   // If Gemini API Key is provided, execute REAL Multimodal Gemini Call
   if (apiKey) {
-    try {
-      return await callRealGeminiApi(apiKey, plant, latestPhoto, journalEntries);
-    } catch (err) {
-      console.error('Gemini API call failed, falling back to local diagnostic engine:', err);
-    }
+    return await callRealGeminiApi(apiKey, plant, latestPhoto, journalEntries);
   }
 
-  // High-Quality Simulated Fallback
+  // High-Quality Simulated Fallback (when no API key is configured)
   await new Promise((resolve) => setTimeout(resolve, 1200));
 
   const lastEntry = journalEntries[0];
@@ -103,7 +103,7 @@ async function callRealGeminiApi(
   latestPhoto?: PlantPhoto,
   journalEntries: JournalEntry[] = []
 ): Promise<AiAnalysisOutput> {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash'];
 
   const promptText = `You are an expert botanical scientist and plant pathologist.
 Analyze the following plant specimen data and photo (if attached) and generate structured health diagnostics.
@@ -148,39 +148,82 @@ Return ONLY a valid JSON object matching this exact structure:
     });
   }
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: {
-        response_mime_type: 'application/json',
-        temperature: 0.2
+  let lastError: Error | null = null;
+
+  for (const model of modelsToTry) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts }],
+          generationConfig: {
+            response_mime_type: 'application/json',
+            temperature: 0.2
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        if (response.status === 400) {
+          throw new Error('Invalid Gemini API Key or malformed request. Please check your key from Google AI Studio.');
+        } else if (response.status === 403) {
+          throw new Error('Gemini API permission denied (403). Check that the key is active and not restricted.');
+        } else if (response.status === 429) {
+          throw new Error('Gemini API rate limit reached (429). Please wait a few seconds and try again.');
+        } else if (response.status === 404) {
+          // Model might not be available under this name, try fallback model in loop
+          throw new Error(`Model ${model} not found (404): ${errText}`);
+        }
+        throw new Error(`Gemini API Error (${response.status}): ${errText}`);
       }
-    })
-  });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API Error (${response.status}): ${errText}`);
+      const data = await response.json();
+      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!textResponse) {
+        throw new Error('Empty response received from Gemini API');
+      }
+
+      // Robust JSON extraction (handles markdown ```json ... ``` codeblocks)
+      let cleanJson = textResponse.trim();
+      if (cleanJson.startsWith('```json')) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+      } else if (cleanJson.startsWith('```')) {
+        cleanJson = cleanJson.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const firstBrace = cleanJson.indexOf('{');
+      const lastBrace = cleanJson.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+      }
+
+      const parsed = JSON.parse(cleanJson);
+
+      return {
+        leaf_condition: parsed.leaf_condition || plant.leaf_condition,
+        color: parsed.color || plant.color,
+        soil_condition: parsed.soil_condition || plant.soil_condition,
+        watering_time: parsed.watering_time || plant.watering_time,
+        suggestion: parsed.suggestion || plant.suggestion,
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.95,
+        analysis_summary: parsed.analysis_summary || 'Gemini AI specimen analysis complete.',
+        recommendations: Array.isArray(parsed.recommendations) && parsed.recommendations.length > 0
+          ? parsed.recommendations
+          : [parsed.suggestion || plant.suggestion]
+      };
+    } catch (err: any) {
+      lastError = err;
+      // If error is 404, loop will try the next model. Otherwise throw immediately.
+      if (!err?.message?.includes('404')) {
+        throw err;
+      }
+    }
   }
 
-  const data = await response.json();
-  const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!textResponse) {
-    throw new Error('Empty response received from Gemini API');
-  }
-
-  const parsed = JSON.parse(textResponse);
-  return {
-    leaf_condition: parsed.leaf_condition || plant.leaf_condition,
-    color: parsed.color || plant.color,
-    soil_condition: parsed.soil_condition || plant.soil_condition,
-    watering_time: parsed.watering_time || plant.watering_time,
-    suggestion: parsed.suggestion || plant.suggestion,
-    confidence: parsed.confidence || 0.92,
-    analysis_summary: parsed.analysis_summary || 'Gemini AI specimen analysis complete.',
-    recommendations: parsed.recommendations || [parsed.suggestion]
-  };
+  throw lastError || new Error('Failed to communicate with Gemini API');
 }
