@@ -58,7 +58,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card account-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title-row">

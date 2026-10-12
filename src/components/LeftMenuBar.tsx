@@ -4,6 +4,7 @@ import { getAssetUrl } from '../utils/assets';
 interface LeftMenuBarProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenPlantBook: () => void;
   onOpenAiConfig: () => void;
   onOpen3dModels: () => void;
   onOpenEditPlant: () => void;
@@ -18,6 +19,7 @@ interface LeftMenuBarProps {
 export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
   isOpen,
   onClose,
+  onOpenPlantBook,
   onOpenAiConfig,
   onOpen3dModels,
   onOpenEditPlant,
@@ -54,21 +56,38 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
 
         {/* User Account Card */}
         <div className="menu-account-card" onClick={() => { onOpenAccount(); onClose(); }}>
-          <div className="account-avatar">
-            <span>🌿</span>
-          </div>
           <div className="account-info">
             <div className="account-name">Botanist Account</div>
             <div className="account-status">Verified Caretaker • Online</div>
           </div>
-          <button className="account-gear-btn" title="Account Details">
-            ⚙️
-          </button>
         </div>
 
         {/* Navigation Actions List */}
         <div className="menu-nav-list">
-          <div className="menu-section-label">SYSTEM TOOLS</div>
+          <div className="menu-section-label">ENCYCLOPEDIA & GUIDES</div>
+
+          {/* PLANT BOOK ENCYCLOPEDIA */}
+          <button
+            className="menu-item-btn highlight-plantbook"
+            onClick={() => {
+              onOpenPlantBook();
+              onClose();
+            }}
+          >
+            <div className="menu-item-icon-minimal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                <path d="M6 6h10"></path>
+                <path d="M6 10h10"></path>
+              </svg>
+            </div>
+            <div className="menu-item-text">
+              <span className="menu-item-title">PLANT BOOK</span>
+              <span className="menu-item-desc">Search Species & Comprehensive Care Guides</span>
+            </div>
+          </button>
+
+          <div className="menu-section-label" style={{ marginTop: '14px' }}>SYSTEM TOOLS</div>
 
           {/* 1. AI CONFIG */}
           <button
@@ -78,7 +97,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">⚡</div>
             <div className="menu-item-text">
               <span className="menu-item-title">AI CONFIG</span>
               <span className="menu-item-desc">Gemini Vision & Diagnostic API Keys</span>
@@ -93,7 +111,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">🪴</div>
             <div className="menu-item-text">
               <span className="menu-item-title">3D MODELS</span>
               <span className="menu-item-desc">Custom GLB files for stages 1, 2, 3</span>
@@ -108,7 +125,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">✏️</div>
             <div className="menu-item-text">
               <span className="menu-item-title">EDIT PLANT</span>
               <span className="menu-item-desc">Configure {plantName} & soil mix</span>
@@ -123,7 +139,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">🗄️</div>
             <div className="menu-item-text">
               <span className="menu-item-title">DATABASE (DB)</span>
               <span className="menu-item-desc">Supabase PostgreSQL cloud sync</span>
@@ -138,7 +153,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">📱</div>
             <div className="menu-item-text">
               <span className="menu-item-title">
                 {isPhonePreview ? 'SWITCH TO DESKTOP' : 'SWITCH TO PHONE UI'}
@@ -152,7 +166,7 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
             </span>
           </button>
 
-          <div className="menu-section-label" style={{ marginTop: '16px' }}>PREFERENCES</div>
+          <div className="menu-section-label" style={{ marginTop: '14px' }}>PREFERENCES</div>
 
           {/* 6. SETTINGS & ACCOUNT */}
           <button
@@ -162,7 +176,6 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
               onClose();
             }}
           >
-            <div className="menu-item-icon">⚙️</div>
             <div className="menu-item-text">
               <span className="menu-item-title">SETTINGS & ACCOUNT</span>
               <span className="menu-item-desc">Units, storage cache, notifications</span>

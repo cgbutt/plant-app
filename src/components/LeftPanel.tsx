@@ -16,6 +16,7 @@ interface LeftPanelProps {
   onOpenJournal: () => void;
   onOpenPhotos: () => void;
   onOpenMenu: () => void;
+  onOpenPlantBook?: () => void;
   onStageChange: (stage: GrowthStage) => void;
   onPlantUpdated: (plant: Plant) => void;
 }
@@ -26,6 +27,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   photos,
   activePhoto,
   onOpenMenu,
+  onOpenPlantBook,
   onPlantUpdated
 }) => {
   const [analyzing, setAnalyzing] = useState(false);
@@ -86,10 +88,27 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
           </div>
         </div>
 
-        {/* Date Added */}
-        <div className="asper-date-added">
-          <span className="asper-small-label">DATE ADDED</span>
-          <span className="asper-date-val">{plant.date_added || 'June 10, 2026'}</span>
+        {/* Plant Book Quick Button & Date Added */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {onOpenPlantBook && (
+            <button
+              onClick={onOpenPlantBook}
+              className="asper-plantbook-nav-btn"
+              title="Open Plant Book Encyclopedia"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                <path d="M6 6h10"></path>
+                <path d="M6 10h10"></path>
+              </svg>
+              <span>PLANT BOOK</span>
+            </button>
+          )}
+
+          <div className="asper-date-added">
+            <span className="asper-small-label">DATE ADDED</span>
+            <span className="asper-date-val">{plant.date_added || 'June 10, 2026'}</span>
+          </div>
         </div>
       </div>
 
@@ -108,45 +127,53 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
 
         {/* Row 2 */}
         <div className="metric-col left">
-          <span className="metric-label">LAST UPDATE</span>
-          <div className="metric-val large">{plant.last_update || 'Today'}</div>
+          <span className="metric-label">AGE</span>
+          <div className="metric-val">{plant.age}</div>
         </div>
 
         <div className="metric-col right">
           <span className="metric-label">SUNLIGHT</span>
-          <div className="metric-val large">{plant.sunlight || 'Bright, indirect'}</div>
+          <div className="metric-val">{plant.sunlight || 'Bright, indirect'}</div>
         </div>
 
         {/* Row 3 */}
         <div className="metric-col left">
-          <span className="metric-label">WATERING</span>
-          <div className="metric-val large">{plant.watering_time || 'Check in 2 days'}</div>
+          <span className="metric-label">NEXT WATERING</span>
+          <div className="metric-val highlight">{plant.watering_time}</div>
         </div>
 
         <div className="metric-col right">
-          <span className="metric-label">SOIL</span>
-          <div className="metric-val soil-list">
-            {(plant.soil_composition || ['30% COCO PEAT', '20% GARDEN SOIL', '50% NORMAL SOIL']).map((soil, i) => (
-              <div key={i} className="soil-line">{soil}</div>
+          <span className="metric-label">LAST UPDATE</span>
+          <div className="metric-val">{plant.last_update || 'Today'}</div>
+        </div>
+
+        {/* Row 4: Soil Mix Composition */}
+        <div className="metric-col left full-width-soil">
+          <span className="metric-label">SOIL COMPOSITION</span>
+          <div className="soil-tags-row">
+            {(plant.soil_composition || ['30% COCO PEAT', '20% GARDEN SOIL', '50% NORMAL SOIL']).map((soil, idx) => (
+              <span key={idx} className="soil-tag">{soil}</span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* PLANT DOC Section (Clean & Minimal) */}
-      <div className="asper-plant-doc-section">
-        <div className="plant-doc-header">
-          <span className="plant-doc-title">PLANT DOC</span>
+      {/* Interactive Plant Doc & AI Botanical Verification Card */}
+      <div className="asper-interactive-doc-card">
+        <div className="doc-card-header">
+          <div className="doc-specimen-badge">
+            <span className="specimen-dot"></span>
+            <span className="specimen-title">{plant.name} • {plant.species}</span>
+          </div>
+          <span className="doc-stage-badge">STAGE {plant.current_stage || 2}/3</span>
         </div>
 
-        {/* Minimal Rounded Container */}
-        <div className="plant-doc-card minimal">
-          <div className="doc-minimal-top">
-            <div className="doc-status-line">
-              <span className={`doc-status-dot ${analyzing ? 'analyzing' : ''}`}></span>
-              <span className="doc-status-title">
+        <div className="doc-card-body">
+          <div className="doc-metric-row">
+            <div className="doc-leaf-health">
+              <span className="doc-status-pill">
                 {analyzing
-                  ? 'ANALYZING SPECIMEN VIA VISION AI...'
+                  ? 'ANALYZING FOLIO...'
                   : aiResult
                   ? `STATUS: ${aiResult.leaf_condition.toUpperCase()} • ${aiResult.color.toUpperCase()}`
                   : 'HEALTH STATUS: OPTIMAL'}
@@ -158,7 +185,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
               className="doc-minimal-scan-btn"
               title="Run AI Vision Health Scan"
             >
-              {analyzing ? 'SCANNING...' : '⚡ AI CHECK'}
+              {analyzing ? 'SCANNING...' : 'AI CHECK'}
             </button>
           </div>
 
@@ -172,7 +199,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
 
           <div className="doc-minimal-footer">
             <span className="doc-advice">
-              💡 {aiResult ? aiResult.suggestion : (plant.suggestion || 'Maintain bright indirect sunlight. Check topsoil moisture before next watering.')}
+              {aiResult ? aiResult.suggestion : (plant.suggestion || 'Maintain bright indirect sunlight. Check topsoil moisture before next watering.')}
             </span>
             {aiResult && (
               <button onClick={handleApplyAiHealth} className="doc-apply-link">
@@ -185,4 +212,3 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
     </div>
   );
 };
-
