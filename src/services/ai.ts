@@ -103,7 +103,12 @@ async function callRealGeminiApi(
   latestPhoto?: PlantPhoto,
   journalEntries: JournalEntry[] = []
 ): Promise<AiAnalysisOutput> {
-  const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+  const modelsToTry = [
+    'gemini-flash-lite-latest',
+    'gemini-flash-latest',
+    'gemini-2.5-flash-lite',
+    'gemini-pro-latest'
+  ];
 
   const promptText = `You are an expert botanical scientist and plant pathologist.
 Analyze the following plant specimen data and photo (if attached) and generate structured health diagnostics.
@@ -174,9 +179,9 @@ Return ONLY a valid JSON object matching this exact structure:
           throw new Error('Gemini API permission denied (403). Check that the key is active and not restricted.');
         } else if (response.status === 429) {
           throw new Error('Gemini API rate limit reached (429). Please wait a few seconds and try again.');
-        } else if (response.status === 404) {
-          // Model might not be available under this name, try fallback model in loop
-          throw new Error(`Model ${model} not found (404): ${errText}`);
+        } else if (response.status === 404 || response.status === 503) {
+          // Model unavailable or temporary spike, try next model in pool
+          throw new Error(`Model ${model} status ${response.status}: ${errText}`);
         }
         throw new Error(`Gemini API Error (${response.status}): ${errText}`);
       }
@@ -218,8 +223,9 @@ Return ONLY a valid JSON object matching this exact structure:
       };
     } catch (err: any) {
       lastError = err;
-      // If error is 404, loop will try the next model. Otherwise throw immediately.
-      if (!err?.message?.includes('404')) {
+      // If error is 404 or 503, loop will try the next fallback model. Otherwise throw immediately.
+      const isRetryable = err?.message?.includes('404') || err?.message?.includes('503');
+      if (!isRetryable) {
         throw err;
       }
     }
