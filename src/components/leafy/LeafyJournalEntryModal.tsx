@@ -75,7 +75,9 @@ export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
       <div
         className="modal-card"
         style={{
-          background: '#ffffff',
+          background: 'var(--bg-modal)',
+          color: 'var(--text-main)',
+          border: '1px solid var(--border-card)',
           borderRadius: 'var(--radius-xl)',
           maxWidth: '520px',
           width: '90%',
@@ -141,7 +143,8 @@ export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
                 border: '1px solid var(--border-card)',
                 fontFamily: 'var(--font-leafy)',
                 fontSize: '14px',
-                background: '#ffffff'
+                background: 'var(--bg-input)',
+                color: 'var(--text-main)'
               }}
             >
               {plants.map((p) => (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { getAssetUrl } from '../utils/assets';
+import { ThemeSelector } from './ThemeSelector';
 
 interface LeftMenuBarProps {
   isOpen: boolean;
@@ -166,7 +167,12 @@ export const LeftMenuBar: React.FC<LeftMenuBarProps> = ({
             </span>
           </button>
 
-          <div className="menu-section-label" style={{ marginTop: '14px' }}>PREFERENCES</div>
+          <div className="menu-section-label" style={{ marginTop: '14px' }}>APPEARANCE & THEME</div>
+          <div style={{ padding: '6px 12px 14px 12px' }}>
+            <ThemeSelector />
+          </div>
+
+          <div className="menu-section-label">PREFERENCES</div>
 
           {/* 6. SETTINGS & ACCOUNT */}
           <button

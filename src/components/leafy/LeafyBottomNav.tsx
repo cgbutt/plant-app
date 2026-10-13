@@ -15,28 +15,30 @@ export const LeafyBottomNav: React.FC<LeafyBottomNavProps> = ({
   return (
     <nav className="leafy-bottom-nav" aria-label="Mobile Navigation">
       <div className="leafy-bottom-nav-container">
-        {/* 1. Home */}
+        {/* 1. Home / Garden (Leaf) */}
         <button
           className={`leafy-bottom-tab ${currentTab === 'home' ? 'active' : ''}`}
           onClick={() => onSelectTab('home')}
           aria-label="Home / My Garden"
         >
           <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6"/>
           </svg>
           <span>Home</span>
         </button>
 
-        {/* 2. Explore / Plant Book */}
+        {/* 2. Explore / Plant Book (4-grid tiles) */}
         <button
           className={`leafy-bottom-tab ${currentTab === 'explore' ? 'active' : ''}`}
           onClick={() => onSelectTab('explore')}
           aria-label="Explore Plant Book"
         >
           <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.3-4.3"/>
+            <rect width="7" height="7" x="3" y="3" rx="2" />
+            <rect width="7" height="7" x="14" y="3" rx="2" />
+            <rect width="7" height="7" x="14" y="14" rx="2" />
+            <rect width="7" height="7" x="3" y="14" rx="2" />
           </svg>
           <span>Explore</span>
         </button>

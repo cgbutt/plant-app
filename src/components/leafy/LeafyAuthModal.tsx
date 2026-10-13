@@ -122,7 +122,8 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
       <div
         className="modal-card"
         style={{
-          background: 'var(--cream)',
+          background: 'var(--bg-modal)',
+          color: 'var(--text-main)',
           borderRadius: 'var(--radius-xl)',
           maxWidth: '440px',
           width: '92%',
@@ -386,7 +387,8 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
                   border: '1px solid var(--border-card)',
                   fontFamily: 'var(--font-leafy)',
                   fontSize: '14px',
-                  background: '#ffffff',
+                  background: 'var(--bg-input)',
+                  color: 'var(--text-main)',
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
@@ -412,7 +414,8 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
                 border: '1px solid var(--border-card)',
                 fontFamily: 'var(--font-leafy)',
                 fontSize: '14px',
-                background: '#ffffff',
+                background: 'var(--bg-input)',
+                color: 'var(--text-main)',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
@@ -451,7 +454,8 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
                     border: '1px solid var(--border-card)',
                     fontFamily: 'var(--font-leafy)',
                     fontSize: '14px',
-                    background: '#ffffff',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-main)',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -497,7 +501,8 @@ export const LeafyAuthModal: React.FC<LeafyAuthModalProps> = ({
                   border: '1px solid var(--border-card)',
                   fontFamily: 'var(--font-leafy)',
                   fontSize: '14px',
-                  background: '#ffffff',
+                  background: 'var(--bg-input)',
+                  color: 'var(--text-main)',
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}

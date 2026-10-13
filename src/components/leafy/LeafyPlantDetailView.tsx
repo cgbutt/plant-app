@@ -89,7 +89,8 @@ export const LeafyPlantDetailView: React.FC<LeafyPlantDetailViewProps> = ({
                 height: '100%',
                 borderRadius: 'var(--radius-xl)',
                 overflow: 'hidden',
-                background: 'rgba(255, 255, 255, 0.7)',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border-subtle)',
                 boxShadow: 'var(--shadow-md)'
               }}
             >

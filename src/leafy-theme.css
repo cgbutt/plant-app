@@ -1,11 +1,13 @@
 /* ==========================================================================
-   LEAFY UI/UX DESIGN SYSTEM
-   Palette & Aesthetic: Calm, mindful botanical minimalism
+   LEAFY UI/UX DESIGN SYSTEM — DUAL THEME ARCHITECTURE
+   Light Theme: Warm, airy, natural, creamy, softly layered (#FAF8F4)
+   Dark Theme: Deep botanical green, charcoal, glowing accents (#101B16)
    Typography: Plus Jakarta Sans
    ========================================================================== */
 
-:root {
-  /* Brand Color Palette */
+:root,
+[data-theme="light"] {
+  /* Brand Color Palette (Light Reference) */
   --leaf-green: #6B8D67;
   --leaf-green-hover: #5A7B56;
   --leaf-green-active: #4E6C4A;
@@ -26,19 +28,103 @@
   --yellow-warm: #F6D686;
   --yellow-soft: #FEF6DF;
 
-  /* Typography Colors */
-  --text-main: #1C2B1F;
+  /* Semantic Typography Colors */
+  --text-main: #20382F;
+  --text-primary: #20382F;
   --text-secondary: #526555;
   --text-muted: #829485;
   --text-light: #A5B5A7;
 
+  /* Surfaces & Backgrounds */
+  --bg-main: #FAF8F4;
+  --bg-secondary: #FAF8F4;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F9F6F0;
+  --bg-shelf: #EFE4DA;
+  --bg-modal: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --bg-input-focus: #FAF8F4;
+  --bg-nav: rgba(250, 248, 244, 0.95);
+  --bg-bottom-nav: #FFFFFF;
+
   /* Borders & Shadows */
   --border-subtle: rgba(107, 141, 103, 0.12);
   --border-card: #EFE9E2;
+  --border-color: #EAE3DB;
   --shadow-sm: 0 2px 8px rgba(45, 60, 42, 0.04);
   --shadow-md: 0 6px 20px rgba(45, 60, 42, 0.06);
   --shadow-lg: 0 12px 32px rgba(45, 60, 42, 0.08);
+  --shadow-shelf: 0 12px 24px rgba(107, 141, 103, 0.12);
+  --overlay-bg: rgba(32, 56, 47, 0.45);
 
+  /* Status Colors */
+  --status-high-bg: #FDE8E2;
+  --status-high-text: #C05638;
+  --status-temp-bg: #FEF6DF;
+  --status-temp-text: #B88728;
+}
+
+[data-theme="dark"] {
+  /* Brand Color Palette (Dark Reference) */
+  --leaf-green: #6AA875;
+  --leaf-green-hover: #7CB886;
+  --leaf-green-active: #599464;
+  --leaf-green-dark: #2E7D32;
+  --sage: #56735F;
+  --sage-light: #1A2921;
+  --matcha: #8DAE7F;
+  --matcha-soft: #203327;
+  --sandy-beige: #3A4339;
+  --cream: #192720;
+  --cream-card: #28382F;
+  --stone: #4A544A;
+  --stone-light: #24352C;
+  --terracotta: #B76E56;
+  --terracotta-soft: #38241F;
+  --sky-blue: #7FA8D9;
+  --sky-blue-soft: #1E2B38;
+  --yellow-warm: #E2B958;
+  --yellow-soft: #332B18;
+
+  /* Semantic Typography Colors */
+  --text-main: #F4F7F2;
+  --text-primary: #F4F7F2;
+  --text-secondary: #AEBEB1;
+  --text-muted: #7E9383;
+  --text-light: #5A705F;
+
+  /* Surfaces & Backgrounds */
+  --bg-main: #101B16;
+  --bg-secondary: #192720;
+  --bg-surface: #22332B;
+  --bg-card: #28382F;
+  --bg-elevated: #28382F;
+  --bg-shelf: #1E2D25;
+  --bg-modal: #22332B;
+  --bg-input: #192720;
+  --bg-input-focus: #22332B;
+  --bg-nav: rgba(16, 27, 22, 0.95);
+  --bg-bottom-nav: #16241D;
+
+  /* Borders & Shadows */
+  --border-subtle: rgba(141, 174, 127, 0.12);
+  --border-card: rgba(141, 174, 127, 0.14);
+  --border-color: rgba(141, 174, 127, 0.16);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-shelf: 0 12px 28px rgba(0, 0, 0, 0.55);
+  --overlay-bg: rgba(8, 14, 11, 0.75);
+
+  /* Status Colors */
+  --status-high-bg: #472620;
+  --status-high-text: #F87171;
+  --status-temp-bg: #382F18;
+  --status-temp-text: #FBBF24;
+}
+
+:root {
   /* Font */
   --font-leafy: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
@@ -199,7 +285,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   color: var(--text-main);
   display: flex;
@@ -242,7 +328,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -292,7 +378,7 @@ body {
   left: 0;
   right: 0;
   z-index: 200;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--bg-bottom-nav);
   backdrop-filter: blur(14px);
   border-top: 1px solid var(--border-subtle);
   box-shadow: 0 -4px 24px rgba(45, 60, 42, 0.06);
@@ -355,7 +441,7 @@ body {
   border-radius: 50%;
   background: var(--leaf-green);
   color: #ffffff;
-  border: 3px solid #ffffff;
+  border: 3px solid var(--bg-surface);
   box-shadow: 0 4px 14px rgba(107, 141, 103, 0.4);
   display: flex;
   align-items: center;
@@ -412,7 +498,7 @@ body {
 
 /* Secondary Button */
 .leafy-btn-secondary {
-  background: #ffffff;
+  background: var(--bg-surface);
   color: var(--text-main);
   border: 1px solid var(--border-card);
   font-family: var(--font-leafy);
@@ -449,7 +535,7 @@ body {
 
 .leafy-filter-pill {
   white-space: nowrap;
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
   font-family: var(--font-leafy);
@@ -483,7 +569,7 @@ body {
 
 .leafy-search-input {
   width: 100%;
-  background: #ffffff;
+  background: var(--bg-input);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-full);
   padding: 14px 48px 14px 46px;
@@ -623,7 +709,7 @@ body {
 }
 
 .leafy-stat-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
   padding: 14px 16px;
@@ -700,7 +786,7 @@ body {
 
 /* My Plant Card */
 .leafy-my-plant-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 12px;
@@ -858,7 +944,7 @@ body {
 }
 
 .leafy-encyclopedia-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 10px;
@@ -1213,7 +1299,7 @@ body {
 }
 
 .leafy-care-row-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 14px 18px;
@@ -1300,7 +1386,7 @@ body {
 }
 
 .leafy-stat-card-4 {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
   padding: 12px 10px;
@@ -1331,7 +1417,7 @@ body {
 }
 
 .leafy-timeline-item {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -1480,4 +1566,90 @@ body {
 @keyframes fadeInDown {
   from { opacity: 0; transform: translate(-50%, -10px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+
+/* ==========================================================================
+   THEME SELECTOR & DUAL THEME ENHANCEMENTS
+   ========================================================================== */
+
+.leafy-theme-segmented-control {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.leafy-theme-segment-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-leafy);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.leafy-theme-segment-btn:hover {
+  color: var(--text-main);
+}
+
+.leafy-theme-segment-btn.active {
+  background: var(--leaf-green);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(107, 141, 103, 0.35);
+}
+
+[data-theme="dark"] .leafy-theme-segment-btn.active {
+  background: var(--leaf-green);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(106, 168, 117, 0.4);
+}
+
+/* Unified Themed Modals */
+.modal-overlay {
+  background: var(--overlay-bg) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: background-color 0.25s ease;
+}
+
+.modal-card {
+  background: var(--bg-modal) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Dark Theme Specific Card & Surface Overrides */
+[data-theme="dark"] .leafy-featured-card {
+  background: linear-gradient(135deg, #1e2e25 0%, #15221b 100%) !important;
+  border: 1px solid rgba(141, 174, 127, 0.16) !important;
+}
+
+[data-theme="dark"] .card-img-box,
+[data-theme="dark"] .card-img-wrapper {
+  background: #192720 !important;
+}
+
+/* Global Smooth Transitions for Theme Swapping */
+html, body, .leafy-app-shell, .leafy-desktop-navbar, .leafy-bottom-nav,
+.leafy-stat-card, .leafy-my-plant-card, .leafy-encyclopedia-card,
+.leafy-care-row-card, .leafy-timeline-item, .modal-card,
+.leafy-btn-secondary, .leafy-filter-pill, .leafy-search-input {
+  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.15s ease, box-shadow 0.22s ease;
 }

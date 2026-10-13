@@ -200,7 +200,7 @@ export const LeafyPlantBookView: React.FC<LeafyPlantBookViewProps> = ({
           style={{
             textAlign: 'center',
             padding: '48px 20px',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border-card)',
             marginTop: '20px'
@@ -272,6 +272,17 @@ export const LeafyPlantBookView: React.FC<LeafyPlantBookViewProps> = ({
                 {/* Common Name & Scientific Name */}
                 <h3 className="card-title">{plant.common_name}</h3>
                 <div className="card-scientific">{plant.scientific_name}</div>
+
+                {/* Category tag & Care Indicators matching Reference Sheet */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    {plant.indoor_suitable ? 'Indoor' : plant.category.split(' ')[0]}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span title="Sunlight" style={{ color: 'var(--yellow-warm)', fontSize: '12px' }}>☀️</span>
+                    <span title="Water requirement" style={{ color: 'var(--sky-blue)', fontSize: '12px' }}>💧</span>
+                  </div>
+                </div>
               </div>
             );
           })}

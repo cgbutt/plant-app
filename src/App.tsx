@@ -506,7 +506,9 @@ export const App: React.FC = () => {
           <div
             className="modal-card"
             style={{
-              background: '#ffffff',
+              background: 'var(--bg-modal)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-card)',
               borderRadius: 'var(--radius-xl)',
               maxWidth: '380px',
               width: '90%',
