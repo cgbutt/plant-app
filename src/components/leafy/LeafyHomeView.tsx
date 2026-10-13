@@ -42,13 +42,13 @@ export const LeafyHomeView: React.FC<LeafyHomeViewProps> = ({
   };
 
   // Compute upcoming reminders based on plant watering status
-  const careRemindersCount = Math.max(
-    1,
-    plants.filter((p) => {
-      const w = (p.watering_time || '').toLowerCase();
-      return w.includes('today') || w.includes('check') || w.includes('2 days') || w.includes('soon');
-    }).length
-  );
+  const careRemindersCount =
+    plants.length === 0
+      ? 0
+      : plants.filter((p) => {
+          const w = (p.watering_time || '').toLowerCase();
+          return w.includes('today') || w.includes('check') || w.includes('2 days') || w.includes('soon');
+        }).length;
 
   // Status dot text and styling for a plant card
   const getPlantStatus = (plant: Plant, index: number) => {
@@ -160,99 +160,137 @@ export const LeafyHomeView: React.FC<LeafyHomeViewProps> = ({
           </button>
         </div>
 
-        {/* Horizontal scroll container on mobile, responsive grid on desktop */}
-        <div className="leafy-plants-scroll-row">
-          {plants.map((plant, index) => {
-            const status = getPlantStatus(plant, index);
-            const isSelected = plant.id === selectedPlantId;
-
-            return (
-              <div
-                key={plant.id}
-                className="leafy-my-plant-card"
-                style={{
-                  borderColor: isSelected ? 'var(--leaf-green)' : undefined,
-                  boxShadow: isSelected ? '0 4px 16px rgba(107, 141, 103, 0.2)' : undefined
-                }}
-                onClick={() => {
-                  onSelectPlant(plant);
-                  onOpenPlantDetail(plant);
-                }}
-              >
-                {/* Plant Thumbnail in organic shape box */}
-                <div className="card-img-box">
-                  <div
-                    style={{
-                      position: 'absolute',
-                      width: '120px',
-                      height: '120px',
-                      borderRadius: '50%',
-                      background: index % 2 === 0 ? 'var(--matcha-soft)' : 'var(--sage-light)',
-                      top: '10px',
-                      left: '10px',
-                      zIndex: 1
-                    }}
-                  />
-                  <img
-                    src={getPlantThumb(plant)}
-                    alt={plant.name}
-                    style={{
-                      position: 'relative',
-                      zIndex: 2,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                </div>
-
-                <h3 className="card-plant-name">{plant.name}</h3>
-                <div className="card-species-name">{plant.species}</div>
-
-                <div className="card-status-dot">
-                  <span
-                    className="status-dot-circle"
-                    style={{ backgroundColor: status.color }}
-                  ></span>
-                  <span>{status.text}</span>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Quick Add Plant Card at end of row */}
+        {plants.length === 0 ? (
           <div
-            className="leafy-my-plant-card"
             style={{
-              border: '2px dashed var(--matcha)',
-              background: 'transparent',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '220px'
+              background: '#ffffff',
+              borderRadius: 'var(--radius-xl)',
+              padding: '32px 24px',
+              textAlign: 'center',
+              border: '1px solid var(--border-card)',
+              marginBottom: '20px'
             }}
-            onClick={onOpenAddPlant}
           >
-            <div
+            <div style={{ fontSize: '36px', marginBottom: '10px' }}>🌱</div>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
+              Your Garden is Ready
+            </h3>
+            <p
               style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: '50%',
-                background: 'var(--matcha-soft)',
-                color: 'var(--leaf-green)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-                marginBottom: '10px'
+                margin: '0 0 18px 0',
+                fontSize: '13px',
+                color: 'var(--text-muted)',
+                maxWidth: '320px',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                lineHeight: 1.5
               }}
             >
-              +
+              Add your first plant to begin logging care routines, growth milestones, and 3D progression.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button className="leafy-btn-primary" onClick={onOpenAddPlant}>
+                + Add Plant
+              </button>
+              <button className="leafy-btn-secondary" onClick={onOpenExplore}>
+                Browse Plant Book
+              </button>
             </div>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--leaf-green)' }}>
-              Add Plant
-            </span>
           </div>
-        </div>
+        ) : (
+          <div className="leafy-plants-scroll-row">
+            {plants.map((plant, index) => {
+              const status = getPlantStatus(plant, index);
+              const isSelected = plant.id === selectedPlantId;
+
+              return (
+                <div
+                  key={plant.id}
+                  className="leafy-my-plant-card"
+                  style={{
+                    borderColor: isSelected ? 'var(--leaf-green)' : undefined,
+                    boxShadow: isSelected ? '0 4px 16px rgba(107, 141, 103, 0.2)' : undefined
+                  }}
+                  onClick={() => {
+                    onSelectPlant(plant);
+                    onOpenPlantDetail(plant);
+                  }}
+                >
+                  {/* Plant Thumbnail in organic shape box */}
+                  <div className="card-img-box">
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: index % 2 === 0 ? 'var(--matcha-soft)' : 'var(--sage-light)',
+                        top: '10px',
+                        left: '10px',
+                        zIndex: 1
+                      }}
+                    />
+                    <img
+                      src={getPlantThumb(plant)}
+                      alt={plant.name}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+
+                  <h3 className="card-plant-name">{plant.name}</h3>
+                  <div className="card-species-name">{plant.species}</div>
+
+                  <div className="card-status-dot">
+                    <span
+                      className="status-dot-circle"
+                      style={{ backgroundColor: status.color }}
+                    ></span>
+                    <span>{status.text}</span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Quick Add Plant Card at end of row */}
+            <div
+              className="leafy-my-plant-card"
+              style={{
+                border: '2px dashed var(--matcha)',
+                background: 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '220px'
+              }}
+              onClick={onOpenAddPlant}
+            >
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '50%',
+                  background: 'var(--matcha-soft)',
+                  color: 'var(--leaf-green)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  marginBottom: '10px'
+                }}
+              >
+                +
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--leaf-green)' }}>
+                Add Plant
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Featured Botanical Card (Matching Reference Screen 1) */}

@@ -1,5 +1,6 @@
 import type { Plant, JournalEntry, PlantPhoto } from '../types/plant';
 import { AuthService } from './auth';
+import { getAssetUrl } from '../utils/assets';
 
 export class CloudStorageService {
   // Fetch user's private plants from cloud
@@ -19,11 +20,14 @@ export class CloudStorageService {
         return [];
       }
 
+      const defaultModel = getAssetUrl('models/monstera.glb');
+
       return (data || []).map((row: any) => ({
         id: row.id,
         user_id: row.user_id,
         name: row.name,
         species: row.species,
+        species_id: row.species_id || undefined,
         age: row.age || '1 Year',
         location: row.location || 'Living room',
         growth_stage_label: row.growth_stage_label || '02 / Growing',
@@ -36,9 +40,9 @@ export class CloudStorageService {
         soil_composition: row.soil_composition || ['30% Coco Peat', '20% Garden Soil', '50% Normal Soil'],
         suggestion: row.suggestion || 'Move closer to indirect light',
         date_added: row.date_added || new Date(row.created_at).toLocaleDateString(),
-        stage1_model: row.stage1_model || '/models/monstera.glb',
-        stage2_model: row.stage2_model || '/models/monstera.glb',
-        stage3_model: row.stage3_model || '/models/monstera.glb',
+        stage1_model: row.stage1_model ? getAssetUrl(row.stage1_model) : defaultModel,
+        stage2_model: row.stage2_model ? getAssetUrl(row.stage2_model) : defaultModel,
+        stage3_model: row.stage3_model ? getAssetUrl(row.stage3_model) : defaultModel,
         created_at: row.created_at,
         updated_at: row.updated_at
       }));
@@ -54,10 +58,12 @@ export class CloudStorageService {
     if (!client) return null;
 
     try {
+      const defaultModel = getAssetUrl('models/monstera.glb');
       const payload: any = {
         user_id: userId,
         name: plant.name,
         species: plant.species,
+        species_id: plant.species_id || null,
         age: plant.age,
         location: plant.location || 'Living room',
         growth_stage: plant.current_stage || 1,
@@ -70,9 +76,9 @@ export class CloudStorageService {
         soil_composition: plant.soil_composition || ['30% Coco Peat', '20% Garden Soil', '50% Normal Soil'],
         suggestion: plant.suggestion || '',
         date_added: plant.date_added || new Date().toLocaleDateString(),
-        stage1_model: plant.stage1_model || '/models/monstera.glb',
-        stage2_model: plant.stage2_model || '/models/monstera.glb',
-        stage3_model: plant.stage3_model || '/models/monstera.glb',
+        stage1_model: plant.stage1_model || defaultModel,
+        stage2_model: plant.stage2_model || defaultModel,
+        stage3_model: plant.stage3_model || defaultModel,
         updated_at: new Date().toISOString()
       };
 
@@ -97,6 +103,7 @@ export class CloudStorageService {
         ...plant,
         id: data.id,
         user_id: data.user_id,
+        species_id: data.species_id || undefined,
         current_stage: data.growth_stage
       };
     } catch (err) {

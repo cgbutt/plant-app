@@ -8,6 +8,7 @@ interface LeafyJournalViewProps {
   photos: PlantPhoto[];
   onOpenNewEntry: () => void;
   onEditEntry: (entry: JournalEntry) => void;
+  onDeleteEntry?: (entryId: string) => Promise<void>;
   onRefreshEntries: () => void;
   onOpenMenu: () => void;
 }
@@ -18,6 +19,7 @@ export const LeafyJournalView: React.FC<LeafyJournalViewProps> = ({
   photos,
   onOpenNewEntry,
   onEditEntry,
+  onDeleteEntry,
   onRefreshEntries,
   onOpenMenu
 }) => {
@@ -101,10 +103,14 @@ export const LeafyJournalView: React.FC<LeafyJournalViewProps> = ({
     return 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=400&q=80';
   };
 
-  const handleDelete = (entryId: string) => {
+  const handleDelete = async (entryId: string) => {
     if (window.confirm('Delete this journal entry?')) {
-      StorageService.deleteJournalEntry(entryId);
-      onRefreshEntries();
+      if (onDeleteEntry) {
+        await onDeleteEntry(entryId);
+      } else {
+        StorageService.deleteJournalEntry(entryId);
+        onRefreshEntries();
+      }
       setActiveMenuEntryId(null);
     }
   };

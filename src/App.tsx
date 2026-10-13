@@ -148,7 +148,7 @@ export const App: React.FC = () => {
   // Load data based on authentication status (Cloud vs Local)
   const refreshUserData = useCallback(async (user: any | null) => {
     if (user) {
-      // 1. Authenticated user -> Load private cloud data from PostgreSQL
+      // 1. Authenticated user -> Load EXCLUSIVELY private cloud data from PostgreSQL
       const [cloudPlants, cloudEntries, cloudPhotos, profile] = await Promise.all([
         CloudStorageService.getPlants(user.id),
         CloudStorageService.getJournalEntries(user.id),
@@ -158,31 +158,22 @@ export const App: React.FC = () => {
 
       setUserProfile(profile);
 
-      // Check if user has local plants that haven't been migrated yet
-      const localPlants = StorageService.getPlants();
-      if (cloudPlants.length === 0 && localPlants.length > 0) {
-        setHasLocalDataToMigrate(true);
-      } else {
-        setHasLocalDataToMigrate(false);
-      }
+      // STRICT ISOLATION: No demo fallback for authenticated accounts!
+      setPlants(cloudPlants);
+      setSelectedPlantId(cloudPlants.length > 0 ? cloudPlants[0].id : '');
+      setJournalEntries(cloudEntries);
+      setPhotos(cloudPhotos);
 
-      setPlants(cloudPlants.length > 0 ? cloudPlants : localPlants);
-      if (cloudPlants.length > 0) {
-        setSelectedPlantId(cloudPlants[0].id);
-      } else if (localPlants.length > 0) {
-        setSelectedPlantId(localPlants[0].id);
-      }
-
-      setJournalEntries(cloudEntries.length > 0 ? cloudEntries : StorageService.getJournalEntries());
-      setPhotos(cloudPhotos.length > 0 ? cloudPhotos : StorageService.getPhotos());
+      // Check if user has non-demo local plants that can optionally be imported
+      const rawLocal = StorageService.getRawLocalPlants();
+      const hasGuestData = rawLocal.length > 0 && !StorageService.isDefaultDemoOnly(rawLocal);
+      setHasLocalDataToMigrate(hasGuestData && cloudPlants.length === 0);
     } else {
       // 2. Guest user -> Load local preview storage
       setUserProfile(null);
       const localPlants = StorageService.getPlants();
       setPlants(localPlants);
-      if (localPlants.length > 0) {
-        setSelectedPlantId(localPlants[0].id);
-      }
+      setSelectedPlantId(localPlants.length > 0 ? localPlants[0].id : '');
       setJournalEntries(StorageService.getJournalEntries());
       setPhotos(StorageService.getPhotos());
       setHasLocalDataToMigrate(false);
@@ -214,13 +205,29 @@ export const App: React.FC = () => {
   // Plant card click from My Garden (Screen 01)
   const handleOpenGardenPlantDetail = (plant: Plant) => {
     setSelectedPlantId(plant.id);
-    const match =
-      PlantEncyclopediaService.getAllPlants().find(
+    let match: EncyclopediaPlant | undefined;
+
+    // 1. Priority: exact species_id
+    if (plant.species_id) {
+      match = PlantEncyclopediaService.getPlantById(plant.species_id);
+    }
+
+    // 2. Fallback: match by common name, scientific name, or slug
+    if (!match) {
+      match = PlantEncyclopediaService.getAllPlants().find(
         (ep) =>
-          ep.common_name.toLowerCase().includes(plant.name.toLowerCase()) ||
+          ep.scientific_name.toLowerCase() === plant.species.toLowerCase() ||
+          ep.common_name.toLowerCase() === plant.species.toLowerCase() ||
+          ep.common_name.toLowerCase() === plant.name.toLowerCase() ||
           plant.species.toLowerCase().includes(ep.common_name.toLowerCase()) ||
           ep.scientific_name.toLowerCase().includes(plant.species.toLowerCase())
-      ) || PlantEncyclopediaService.getAllPlants()[0];
+      );
+    }
+
+    // 3. Fallback: first encyclopedia plant
+    if (!match) {
+      match = PlantEncyclopediaService.getAllPlants()[0];
+    }
 
     navigateToPlantDetail(match);
   };
@@ -232,11 +239,40 @@ export const App: React.FC = () => {
       if (saved) {
         setPlants((prev) => [saved, ...prev]);
         setSelectedPlantId(saved.id);
+
+        // Also create initial journal entry in cloud
+        await CloudStorageService.saveJournalEntry(
+          {
+            id: '',
+            plant_id: saved.id,
+            date: new Date().toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            }).toUpperCase(),
+            title: 'SPECIMEN ADDED FROM PLANT BOOK',
+            notes: `Added ${saved.name} (${saved.species}) to personal garden.`,
+            created_at: new Date().toISOString()
+          },
+          currentUser.id
+        );
+        await refreshUserData(currentUser);
       }
     } else {
-      const updatedList = StorageService.getPlants();
+      const updatedList = StorageService.updatePlant(newPlant);
+      StorageService.addJournalEntry({
+        plant_id: newPlant.id,
+        date: new Date().toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        }).toUpperCase(),
+        title: 'SPECIMEN ADDED FROM PLANT BOOK',
+        notes: `Added ${newPlant.name} (${newPlant.species}) to personal garden.`
+      });
       setPlants(updatedList);
       setSelectedPlantId(newPlant.id);
+      setJournalEntries(StorageService.getJournalEntries());
     }
     setActiveGardenModalPlant(null);
     navigateToHome();
@@ -260,11 +296,58 @@ export const App: React.FC = () => {
         setSelectedPlantId(saved.id);
       }
     } else {
-      const updatedList = StorageService.getPlants();
+      const updatedList = StorageService.updatePlant(savedPlant);
       setPlants(updatedList);
       setSelectedPlantId(savedPlant.id);
     }
     showToast(`✓ Saved ${savedPlant.name}`);
+  };
+
+  // Plant deletion handler
+  const handlePlantDelete = async (plantId: string) => {
+    if (currentUser) {
+      await CloudStorageService.deletePlant(plantId, currentUser.id);
+      setPlants((prev) => prev.filter((p) => p.id !== plantId));
+      if (selectedPlantId === plantId) {
+        setSelectedPlantId('');
+      }
+    } else {
+      const updated = StorageService.deletePlant(plantId);
+      setPlants(updated);
+      if (selectedPlantId === plantId) {
+        setSelectedPlantId(updated.length > 0 ? updated[0].id : '');
+      }
+    }
+    setActiveModal(null);
+    showToast('Plant deleted from garden.');
+  };
+
+  // Journal entry save handler
+  const handleSaveJournalEntry = async (entryData: Partial<JournalEntry>) => {
+    if (currentUser) {
+      await CloudStorageService.saveJournalEntry(entryData as JournalEntry, currentUser.id);
+      await refreshUserData(currentUser);
+    } else {
+      if (entryData.id) {
+        StorageService.updateJournalEntry(entryData as JournalEntry);
+      } else {
+        StorageService.addJournalEntry(entryData as any);
+      }
+      setJournalEntries(StorageService.getJournalEntries());
+    }
+    showToast('✓ Journal entry saved!');
+  };
+
+  // Journal entry delete handler
+  const handleDeleteJournalEntry = async (entryId: string) => {
+    if (currentUser) {
+      await CloudStorageService.deleteJournalEntry(entryId, currentUser.id);
+      setJournalEntries((prev) => prev.filter((e) => e.id !== entryId));
+    } else {
+      StorageService.deleteJournalEntry(entryId);
+      setJournalEntries(StorageService.getJournalEntries());
+    }
+    showToast('Journal entry deleted.');
   };
 
   // Local Garden Import to Cloud Handler
@@ -276,6 +359,8 @@ export const App: React.FC = () => {
     showToast('Importing local plants to cloud account...');
     const result = await CloudStorageService.migrateLocalGarden(currentUser.id, localPlants, localEntries);
 
+    // Clear local storage demo plants so guest and cloud don't conflict
+    StorageService.clearLocalPlants();
     setHasLocalDataToMigrate(false);
     await refreshUserData(currentUser);
     showToast(`🌱 Successfully imported ${result.importedPlants} plants & ${result.importedEntries} logs!`);
@@ -362,9 +447,21 @@ export const App: React.FC = () => {
         {viewMode === 'plantbook-detail' && selectedEncyclopediaPlant && (
           <LeafyPlantDetailView
             plant={selectedEncyclopediaPlant}
-            userPlant={currentPlant}
+            userPlant={
+              plants.find((p) => {
+                if (selectedPlantId && p.id === selectedPlantId) return true;
+                if (p.species_id && p.species_id === selectedEncyclopediaPlant.id) return true;
+                if (p.species.toLowerCase() === selectedEncyclopediaPlant.scientific_name.toLowerCase()) return true;
+                if (p.species.toLowerCase() === selectedEncyclopediaPlant.common_name.toLowerCase()) return true;
+                if (p.name.toLowerCase() === selectedEncyclopediaPlant.common_name.toLowerCase()) return true;
+                return false;
+              })
+            }
             journalEntries={journalEntries.filter(
-              (e) => currentPlant && e.plant_id === currentPlant.id
+              (e) => {
+                const matched = plants.find((p) => p.id === selectedPlantId);
+                return matched && e.plant_id === matched.id;
+              }
             )}
             onBack={() => {
               if (previousViewMode === 'home') navigateToHome();
@@ -389,6 +486,7 @@ export const App: React.FC = () => {
               setEditingJournalEntry(entry);
               setActiveModal('journal-leafy');
             }}
+            onDeleteEntry={handleDeleteJournalEntry}
             onRefreshEntries={() => refreshUserData(currentUser)}
             onOpenMenu={() => setIsMenuOpen(true)}
           />
@@ -460,10 +558,7 @@ export const App: React.FC = () => {
             setActiveModal(null);
             setEditingJournalEntry(null);
           }}
-          onSaved={async () => {
-            await refreshUserData(currentUser);
-            showToast('✓ Journal entry saved!');
-          }}
+          onSaveEntry={handleSaveJournalEntry}
         />
       )}
 
@@ -491,6 +586,7 @@ export const App: React.FC = () => {
           plant={currentPlant}
           onClose={() => setActiveModal(null)}
           onSave={handlePlantSave}
+          onDelete={handlePlantDelete}
         />
       )}
 
@@ -529,8 +625,10 @@ export const App: React.FC = () => {
         <LeafyAuthModal
           initialMode={authModalMode}
           onClose={() => setActiveModal(null)}
-          onSuccess={() => {
-            refreshUserData(AuthService.getClient()?.auth.getUser());
+          onSuccess={async () => {
+            const user = await AuthService.getCurrentUser();
+            setCurrentUser(user);
+            await refreshUserData(user);
             showToast('🌱 Signed in successfully!');
           }}
           onOpenConfig={() => setActiveModal('supabase-config')}

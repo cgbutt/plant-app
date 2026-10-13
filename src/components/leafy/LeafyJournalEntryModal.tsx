@@ -7,7 +7,8 @@ interface LeafyJournalEntryModalProps {
   currentPlant?: Plant;
   editingEntry?: JournalEntry | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaveEntry?: (entry: Partial<JournalEntry>) => Promise<void>;
+  onSaved?: () => void;
 }
 
 export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
@@ -15,6 +16,7 @@ export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
   currentPlant,
   editingEntry,
   onClose,
+  onSaveEntry,
   onSaved
 }) => {
   const [plantId, setPlantId] = useState(
@@ -31,7 +33,7 @@ export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
   const [watering, setWatering] = useState(editingEntry?.watering || '');
   const [photoUrl, setPhotoUrl] = useState(editingEntry?.photo_url || '');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !notes.trim()) return;
 
@@ -41,32 +43,30 @@ export const LeafyJournalEntryModal: React.FC<LeafyJournalEntryModalProps> = ({
       year: 'numeric'
     }).toUpperCase();
 
-    if (editingEntry) {
-      StorageService.updateJournalEntry({
-        ...editingEntry,
-        plant_id: plantId,
-        title: title.trim(),
-        notes: notes.trim(),
-        height_cm: heightCm ? parseFloat(heightCm) : undefined,
-        leaf_count: leafCount ? parseInt(leafCount, 10) : undefined,
-        watering: watering.trim() || undefined,
-        photo_url: photoUrl.trim() || undefined
-      });
+    const entryPayload: Partial<JournalEntry> = {
+      ...(editingEntry || {}),
+      plant_id: plantId,
+      date: editingEntry?.date || formattedDate,
+      title: title.trim(),
+      notes: notes.trim(),
+      height_cm: heightCm ? parseFloat(heightCm) : undefined,
+      leaf_count: leafCount ? parseInt(leafCount, 10) : undefined,
+      watering: watering.trim() || undefined,
+      condition: 'Healthy',
+      photo_url: photoUrl.trim() || undefined
+    };
+
+    if (onSaveEntry) {
+      await onSaveEntry(entryPayload);
     } else {
-      StorageService.addJournalEntry({
-        plant_id: plantId,
-        date: formattedDate,
-        title: title.trim(),
-        notes: notes.trim(),
-        height_cm: heightCm ? parseFloat(heightCm) : undefined,
-        leaf_count: leafCount ? parseInt(leafCount, 10) : undefined,
-        watering: watering.trim() || undefined,
-        condition: 'Healthy',
-        photo_url: photoUrl.trim() || undefined
-      });
+      if (editingEntry) {
+        StorageService.updateJournalEntry(entryPayload as JournalEntry);
+      } else {
+        StorageService.addJournalEntry(entryPayload as any);
+      }
+      if (onSaved) onSaved();
     }
 
-    onSaved();
     onClose();
   };
 

@@ -178,3 +178,26 @@ CREATE POLICY "Users can delete own media" ON storage.objects
     bucket_id = 'plant-media' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- =========================================================================
+-- 6. RPC TO ALLOW LOGGED-IN USERS TO ATOMICALLY DELETE THEIR OWN ACCOUNT
+-- =========================================================================
+CREATE OR REPLACE FUNCTION public.delete_user()
+RETURNS void AS $$
+BEGIN
+  -- Deleting from auth.users cascades to profiles, plants, journal_entries, and plant_photos
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.delete_user() TO authenticated;
+
+-- =========================================================================
+-- 7. PERFORMANCE & MULTI-USER ISOLATION INDEXES
+-- =========================================================================
+CREATE INDEX IF NOT EXISTS idx_plants_user_id ON public.plants(user_id);
+CREATE INDEX IF NOT EXISTS idx_plants_species_id ON public.plants(species_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_user_id ON public.journal_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_plant_id ON public.journal_entries(plant_id);
+CREATE INDEX IF NOT EXISTS idx_plant_photos_user_id ON public.plant_photos(user_id);
+CREATE INDEX IF NOT EXISTS idx_plant_photos_plant_id ON public.plant_photos(plant_id);

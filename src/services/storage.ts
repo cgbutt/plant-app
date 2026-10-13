@@ -93,6 +93,28 @@ export class StorageService {
     }
   }
 
+  static getRawLocalPlants(): Plant[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.PLANTS);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  static isDefaultDemoOnly(plants: Plant[]): boolean {
+    if (!plants || plants.length === 0) return true;
+    return plants.length === 1 && plants[0].id === 'plant-monstera-1';
+  }
+
+  static clearLocalPlants(): void {
+    localStorage.removeItem(STORAGE_KEYS.PLANTS);
+    localStorage.removeItem(STORAGE_KEYS.JOURNAL);
+    localStorage.removeItem(STORAGE_KEYS.PHOTOS);
+  }
+
   static savePlants(plants: Plant[]): void {
     localStorage.setItem(STORAGE_KEYS.PLANTS, JSON.stringify(plants));
   }

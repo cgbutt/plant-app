@@ -44,6 +44,7 @@ export const AddToGardenModal: React.FC<AddToGardenModalProps> = ({
       soil_condition: plant.soil.summary,
       suggestion: plant.guides.light_placement.slice(0, 90) + '...',
       current_stage: 1,
+      species_id: plant.id,
       soil_composition: [
         '40% POTTING SOIL',
         '30% PERLITE',
@@ -52,20 +53,6 @@ export const AddToGardenModal: React.FC<AddToGardenModalProps> = ({
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-
-    StorageService.updatePlant(newPlant);
-
-    // Also create initial journal entry
-    StorageService.addJournalEntry({
-      plant_id: newPlant.id,
-      date: new Date().toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      }).toUpperCase(),
-      title: 'SPECIMEN ADDED FROM PLANT BOOK',
-      notes: notes.trim() || `Added ${plant.common_name} (${plant.scientific_name}) to personal journal.`
-    });
 
     onAdded(newPlant);
   };

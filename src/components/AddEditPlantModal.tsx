@@ -6,12 +6,14 @@ interface AddEditPlantModalProps {
   plant?: Plant | null;
   onClose: () => void;
   onSave: (savedPlant: Plant) => void;
+  onDelete?: (plantId: string) => void;
 }
 
 export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
   plant,
   onClose,
-  onSave
+  onSave,
+  onDelete
 }) => {
   const isEditing = Boolean(plant);
 
@@ -53,6 +55,7 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
       watering_time: wateringTime.trim(),
       suggestion: suggestion.trim(),
       current_stage: plant?.current_stage || 1,
+      species_id: plant?.species_id,
       stage1_model: stage1Url,
       stage2_model: stage2Url,
       stage3_model: stage3Url,
@@ -60,7 +63,6 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
       updated_at: new Date().toISOString()
     };
 
-    StorageService.updatePlant(plantData);
     onSave(plantData);
     onClose();
   };
@@ -217,8 +219,27 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
             </div>
           </div>
 
-          <div className="modal-actions-bottom">
-            <button type="submit" className="minimal-btn save">
+          <div className="modal-actions-bottom" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {isEditing && onDelete && plant && (
+              <button
+                type="button"
+                className="minimal-btn"
+                style={{
+                  background: '#fee2e2',
+                  color: '#b91c1c',
+                  border: '1px solid #fca5a5',
+                  padding: '10px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => onDelete(plant.id)}
+              >
+                🗑️ DELETE SPECIMEN
+              </button>
+            )}
+            <button type="submit" className="minimal-btn save" style={{ flex: 1 }}>
               {isEditing ? 'UPDATE SPECIMEN' : 'CREATE SPECIMEN'}
             </button>
           </div>

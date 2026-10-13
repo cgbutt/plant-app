@@ -13,7 +13,7 @@ interface ThreePlantViewerProps {
 }
 
 // Custom GLB Loader Component with robust pivot-wrapper auto-centering & scale normalization
-function ExternalGLBModel({ url }: { url: string }) {
+function ExternalGLBModel({ url, species, stage }: { url: string; species: string; stage: GrowthStage }) {
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
   const [error, setError] = useState<boolean>(false);
 
@@ -22,8 +22,10 @@ function ExternalGLBModel({ url }: { url: string }) {
     setError(false);
 
     const loader = new GLTFLoader();
+    const resolvedUrl = getAssetUrl(url);
+
     loader.load(
-      getAssetUrl(url),
+      resolvedUrl,
       (gltf) => {
         if (!isMounted) return;
         const rawScene = gltf.scene;
@@ -59,7 +61,7 @@ function ExternalGLBModel({ url }: { url: string }) {
       },
       undefined,
       (err) => {
-        console.error('Error loading custom GLB model:', err);
+        console.warn(`Could not load GLB at "${resolvedUrl}", falling back to procedural 3D model:`, err);
         if (isMounted) setError(true);
       }
     );
@@ -69,7 +71,11 @@ function ExternalGLBModel({ url }: { url: string }) {
     };
   }, [url]);
 
-  if (error || !modelGroup) {
+  if (error) {
+    return <ProceduralPlantModel species={species} stage={stage} />;
+  }
+
+  if (!modelGroup) {
     return null;
   }
 
@@ -406,7 +412,7 @@ export const ThreePlantViewer: React.FC<ThreePlantViewerProps> = ({ modelUrl, sp
           }
         >
           {modelUrl ? (
-            <ExternalGLBModel url={modelUrl} />
+            <ExternalGLBModel url={modelUrl} species={species} stage={stage} />
           ) : (
             <ProceduralPlantModel species={species} stage={stage} />
           )}

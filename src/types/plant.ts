@@ -39,6 +39,7 @@ export interface Plant {
   user_id?: string;
   name: string;
   species: string;
+  species_id?: string;
   age: string;
   leaf_condition: string;
   color: string;

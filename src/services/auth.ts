@@ -10,10 +10,13 @@ class AuthServiceClass {
   public getCredentials() {
     const url =
       (import.meta.env.VITE_SUPABASE_URL as string) ||
+      (import.meta.env.NEXT_PUBLIC_SUPABASE_URL as string) ||
       localStorage.getItem(SUPABASE_URL_KEY) ||
       '';
     const key =
       (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
+      (import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as string) ||
+      (import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ||
       localStorage.getItem(SUPABASE_KEY_KEY) ||
       '';
     return { url, key };
@@ -100,10 +103,14 @@ class AuthServiceClass {
     if (!client) return { error: 'Supabase project not connected.' };
 
     try {
+      const base = import.meta.env.BASE_URL || '/';
+      const cleanBase = base.endsWith('/') ? base : `${base}/`;
+      const redirectUrl = `${window.location.origin}${cleanBase}`;
+
       const { error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectUrl
         }
       });
 
@@ -120,8 +127,12 @@ class AuthServiceClass {
     if (!client) return { error: 'Supabase project not connected.' };
 
     try {
+      const base = import.meta.env.BASE_URL || '/';
+      const cleanBase = base.endsWith('/') ? base : `${base}/`;
+      const redirectUrl = `${window.location.origin}${cleanBase}#/reset-password`;
+
       const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}#/reset-password`
+        redirectTo: redirectUrl
       });
 
       if (error) return { error: error.message };
@@ -241,11 +252,16 @@ class AuthServiceClass {
     if (!client) return { error: 'Supabase not connected' };
 
     try {
-      // 1. Delete user plants (cascades to photos & journal entries via foreign keys)
-      await client.from('plants').delete().eq('user_id', user.id);
-      // 2. Delete user profile
-      await client.from('profiles').delete().eq('id', user.id);
-      // 3. Sign out
+      // 1. Attempt secure PostgreSQL RPC function (deletes auth.users and cascades to profiles, plants, etc.)
+      const { error: rpcError } = await client.rpc('delete_user');
+      if (rpcError) {
+        console.warn('RPC delete_user unavailable or failed, performing manual table cleanup:', rpcError.message);
+        await client.from('plants').delete().eq('user_id', user.id);
+        await client.from('journal_entries').delete().eq('user_id', user.id);
+        await client.from('plant_photos').delete().eq('user_id', user.id);
+        await client.from('profiles').delete().eq('id', user.id);
+      }
+      // 2. Sign out
       await client.auth.signOut();
       return { error: null };
     } catch (err: any) {

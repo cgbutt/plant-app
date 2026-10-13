@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Plant, PlantPhoto } from '../types/plant';
 import { StorageService } from '../services/storage';
+import { AuthService } from '../services/auth';
 
 interface PhotosModalProps {
   plant: Plant;
@@ -27,22 +28,27 @@ export const PhotosModal: React.FC<PhotosModalProps> = ({ plant, photos, onClose
     }
   };
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!previewUrl) return;
-
-    const formattedDate = new Date().toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }).toUpperCase();
-
-    StorageService.addPhoto({
-      plant_id: plant.id,
-      image_url: previewUrl,
-      caption: caption.trim() || `${plant.name} specimen photograph`,
-      date: formattedDate
-    });
+    const user = await AuthService.getCurrentUser();
+    if (user) {
+      const client = AuthService.getClient();
+      if (client) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(plant.id);
+        await client.from('plant_photos').insert({
+          user_id: user.id,
+          plant_id: isUuid ? plant.id : null,
+          image_url: previewUrl,
+          caption: caption.trim() || `${plant.name} specimen photograph`,
+          date: formattedDate
+        });
+      }
+    } else {
+      StorageService.addPhoto({
+        plant_id: plant.id,
+        image_url: previewUrl,
+        caption: caption.trim() || `${plant.name} specimen photograph`,
+        date: formattedDate
+      });
+    }
 
     setCaption('');
     setPreviewUrl('');

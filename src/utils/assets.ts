@@ -15,13 +15,15 @@ export function getAssetUrl(path: string): string {
     return path;
   }
 
-  const base = import.meta.env.BASE_URL || './';
+  const base = import.meta.env.BASE_URL || '/';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
 
-  // If base ends with slash (e.g. '/' or './' or '/repo/'), append directly
-  if (base.endsWith('/')) {
-    return `${base}${cleanPath}`;
+  // Prevent path doubling if path already contains the base segment
+  const trimmedBase = cleanBase.replace(/^\/|\/$/g, '');
+  if (trimmedBase && cleanPath.startsWith(trimmedBase + '/')) {
+    return `/${cleanPath}`;
   }
 
-  return `${base}/${cleanPath}`;
+  return `${cleanBase}${cleanPath}`;
 }
