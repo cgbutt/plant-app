@@ -28,6 +28,11 @@ export const PhotosModal: React.FC<PhotosModalProps> = ({ plant, photos, onClose
     }
   };
 
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!previewUrl) return;
+
+    const formattedDate = new Date().toISOString().split('T')[0];
     const user = await AuthService.getCurrentUser();
     if (user) {
       const client = AuthService.getClient();

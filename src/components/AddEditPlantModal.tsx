@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import type { Plant, GrowthStage } from '../types/plant';
-import { StorageService } from '../services/storage';
 
 interface AddEditPlantModalProps {
   plant?: Plant | null;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { EncyclopediaPlant } from '../../types/encyclopedia';
 import type { Plant } from '../../types/plant';
-import { StorageService } from '../../services/storage';
 
 interface AddToGardenModalProps {
   plant: EncyclopediaPlant;
