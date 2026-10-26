@@ -45,7 +45,9 @@ html, body, #root {
   width: 100%;
   max-width: 412px;
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
