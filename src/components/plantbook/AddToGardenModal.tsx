@@ -13,9 +13,9 @@ export const AddToGardenModal: React.FC<AddToGardenModalProps> = ({
   onClose,
   onAdded
 }) => {
-  const [nickname, setNickname] = useState(plant.common_name.toUpperCase());
+  const [nickname, setNickname] = useState(plant.common_name);
   const [location, setLocation] = useState('Living room');
-  const [age, setAge] = useState('1 YEAR');
+  const [age, setAge] = useState('1 Year');
   const [wateringTime, setWateringTime] = useState(plant.watering.summary);
   const [sunlight, setSunlight] = useState(plant.light.summary);
   const [notes, setNotes] = useState(`Added from Plant Book (${plant.scientific_name}).`);
@@ -25,9 +25,9 @@ export const AddToGardenModal: React.FC<AddToGardenModalProps> = ({
 
     const newPlant: Plant = {
       id: 'plant-' + plant.id + '-' + Date.now().toString(36),
-      name: nickname.trim().toUpperCase() || plant.common_name.toUpperCase(),
-      species: plant.scientific_name.toUpperCase(),
-      age: age.trim().toUpperCase() || '1 YEAR',
+      name: nickname.trim() || plant.common_name,
+      species: plant.scientific_name,
+      age: age.trim() || '1 Year',
       growth_stage_label: '01 / Young',
       location: location.trim() || 'Living room',
       last_update: 'Just added from Plant Book',

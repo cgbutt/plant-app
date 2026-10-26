@@ -45,9 +45,9 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
 
     const plantData: Plant = {
       id: plant?.id || 'plant-' + Date.now(),
-      name: name.trim().toUpperCase(),
-      species: species.trim().toUpperCase(),
-      age: age.trim().toUpperCase(),
+      name: name.trim(),
+      species: species.trim(),
+      age: age.trim(),
       leaf_condition: leafCondition.trim(),
       color: color.trim(),
       soil_condition: soilCondition.trim(),
@@ -58,6 +58,8 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
       stage1_model: stage1Url,
       stage2_model: stage2Url,
       stage3_model: stage3Url,
+      card_color: plant?.card_color,
+      image_cutout: plant?.image_cutout,
       created_at: plant?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

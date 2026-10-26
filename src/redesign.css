@@ -1,0 +1,1690 @@
+/* ==========================================================================
+   LEAFY — COMPLETE MINIMAL EDITORIAL REDESIGN
+   Precise pixel-perfect implementation sampled from Figma reference screenshots
+   ========================================================================== */
+
+:root {
+  --leafy-collection-bg: #F0F0F0;
+  --leafy-detail-bg: #242F21;
+  --leafy-text-black: #000000;
+  --leafy-text-gray: #9C9C9C;
+  --leafy-card-radius: 32px;
+  --leafy-bento-radius: 26px;
+  --leafy-pill-radius: 9999px;
+  --leafy-font: 'Satoshi', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --leafy-pixel-font: 'Segment-Regular', 'Segment', sans-serif;
+}
+
+/* Global Reset */
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #121413;
+  color: #000000;
+  font-family: var(--leafy-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.leafy-redesign-root {
+  font-family: var(--leafy-font);
+  background-color: #121413;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* iPhone 16 Centered Frame Container */
+.leafy-device-canvas {
+  width: 100%;
+  max-width: 412px;
+  min-height: 100vh;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: var(--leafy-collection-bg);
+  transition: background-color 0.25s ease;
+}
+
+.leafy-device-canvas.detail-mode {
+  background-color: var(--leafy-detail-bg);
+}
+
+@media (min-width: 600px) {
+  .leafy-device-canvas {
+    height: clamp(740px, 92vh, 890px);
+    max-height: 94vh;
+    border-radius: 44px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45), 0 0 0 8px #1e2220, 0 0 0 10px #2f3431;
+    margin: auto;
+  }
+}
+
+/* ==========================================================================
+   SCREEN 1: PLANT COLLECTION
+   ========================================================================== */
+
+.leafy-collection-screen {
+  background-color: var(--leafy-collection-bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Top Header */
+.leafy-collection-header {
+  padding: clamp(24px, 5vh, 44px) clamp(20px, 6vw, 32px) 0 clamp(20px, 6vw, 32px);
+  text-align: left;
+  user-select: none;
+  z-index: 20;
+}
+
+.leafy-collection-owner-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 2px 8px 2px 0;
+  transition: opacity 0.15s ease;
+  user-select: none;
+  outline: none;
+}
+
+.leafy-collection-owner-row:hover {
+  opacity: 0.85;
+}
+
+.leafy-collection-owner-row:focus-visible {
+  box-shadow: 0 0 0 2px #242F21;
+}
+
+.leafy-owner-edit-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  transition: all 0.18s ease;
+}
+
+.leafy-collection-owner-row:hover .leafy-owner-edit-badge {
+  background: rgba(0, 0, 0, 0.12);
+  transform: scale(1.1);
+}
+
+.leafy-collection-owner {
+  font-size: clamp(28px, 7.5vw, 34px);
+  font-weight: 800;
+  color: var(--leafy-text-black);
+  margin: 0;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.leafy-collection-subtitle {
+  font-size: clamp(20px, 5vw, 24px);
+  font-weight: 500;
+  color: var(--leafy-text-gray);
+  margin: 4px 0 0 0;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+/* Center Stack Section */
+.leafy-collection-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.leafy-plant-stack-stage {
+  width: 100%;
+  height: clamp(340px, 48vh, 420px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  touch-action: pan-y;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+  margin: 0;
+  overflow: visible;
+}
+
+.leafy-stack-viewport {
+  position: relative;
+  width: clamp(260px, 84vw, 342px);
+  height: clamp(290px, 40vh, 360px);
+  overflow: visible;
+}
+
+.leafy-stack-item-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  overflow: visible;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Plant Card — Soft Diffused Depth & Visual Layer Separation */
+.leafy-plant-card {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--leafy-card-radius);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 16px 22px 0 22px;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Very soft, subtle edge highlight to demarcate card boundaries */
+  border: 1px solid rgba(255, 255, 255, 0.48);
+}
+
+/* 1. Active / Foreground Card — Prominent, organic ambient shadow with clear layer separation */
+.leafy-plant-card.active-card {
+  box-shadow:
+    /* Top edge ambient reflection */
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.7),
+    /* Hairline boundary definition */
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    /* Soft upward shadow cast onto the card immediately behind */
+    0 -8px 24px -2px rgba(18, 28, 20, 0.14),
+    /* Natural elevated downward diffusion */
+    0 8px 20px -3px rgba(18, 28, 20, 0.10),
+    0 24px 48px -8px rgba(18, 28, 20, 0.18);
+}
+
+/* 2. Background Stacked Cards — Distinct layers with upward shadow onto the card behind */
+.leafy-plant-card.stacked-card {
+  box-shadow:
+    /* Subtle top edge highlight */
+    inset 0 1px 1.2px 0 rgba(255, 255, 255, 0.5),
+    /* Hairline boundary definition */
+    0 0 0 1px rgba(0, 0, 0, 0.035),
+    /* Soft upward shadow cast onto the next card behind */
+    0 -6px 20px -2px rgba(18, 28, 20, 0.12),
+    /* Diffused downward depth */
+    0 6px 16px -3px rgba(18, 28, 20, 0.08),
+    0 16px 32px -8px rgba(18, 28, 20, 0.14);
+}
+
+/* 3. Peek Card Below — Gentle grounded shadow */
+.leafy-plant-card.peek-card {
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 6px 16px -4px rgba(18, 28, 20, 0.10);
+}
+
+.leafy-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 10;
+  position: relative;
+  pointer-events: none;
+}
+
+.leafy-card-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-card-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.leafy-card-number {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1;
+  letter-spacing: -0.4px;
+}
+
+.leafy-card-stacked-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A201A;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  opacity: 0.92;
+}
+
+.leafy-card-nickname {
+  font-size: 34px;
+  font-weight: 800;
+  color: #000000;
+  margin: 3px 0 0 0;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.leafy-card-species {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 3px 0 0 0;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+}
+
+.leafy-card-icon-wrap {
+  padding-top: 3px;
+}
+
+/* Decorative Circles Stage */
+.leafy-card-visual-stage {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 290px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.leafy-deco-circle {
+  border-radius: 50%;
+  position: absolute;
+}
+
+.leafy-circle-dark {
+  width: 240px;
+  height: 240px;
+  left: 10px;
+  bottom: 15px;
+}
+
+.leafy-circle-light {
+  width: 240px;
+  height: 240px;
+  left: 105px;
+  bottom: 25px;
+}
+
+/* Triangles Deco Stage (Yellow Card 02) */
+.leafy-deco-triangles-stage {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.leafy-deco-triangles-svg {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  width: 280px;
+  height: 210px;
+  opacity: 0.95;
+}
+
+/* Tilted Rect Deco Stage (Miles Olive Card 05) */
+.leafy-deco-tilted-stage {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 290px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.leafy-deco-tilted-rect {
+  position: absolute;
+  bottom: 20px;
+  left: -20px;
+  width: 240px;
+  height: 240px;
+  border-radius: 44px;
+  transform: rotate(-24deg);
+}
+
+.leafy-card-plant-img {
+  position: absolute;
+  bottom: -4px;
+  right: -8px;
+  width: 290px;
+  height: 290px;
+  object-fit: contain;
+  z-index: 6;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.18));
+}
+
+/* Bottom Standalone Navigation (Elevated Plus in Center, No Bar, No Container) */
+.leafy-standalone-bottom-nav {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 clamp(20px, 6vw, 40px) max(20px, env(safe-area-inset-bottom, 20px)) clamp(20px, 6vw, 40px);
+  background: transparent;
+  user-select: none;
+  z-index: 60; /* Highly elevated well above all cards */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: auto;
+  margin-top: 4px;
+}
+
+.leafy-nav-plus-anchor {
+  margin-bottom: clamp(6px, 1.5vh, 12px);
+  display: flex;
+  justify-content: center;
+  z-index: 65;
+  pointer-events: auto;
+  position: relative;
+}
+
+.leafy-nav-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 60;
+  pointer-events: auto;
+}
+
+.leafy-nav-standalone-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease, background 0.15s ease;
+  outline: none;
+  pointer-events: auto;
+}
+
+.leafy-nav-standalone-btn:hover {
+  transform: scale(1.15);
+}
+
+.leafy-nav-standalone-btn:active {
+  transform: scale(0.92);
+}
+
+.leafy-nav-standalone-btn.plus-btn {
+  transform: scale(1.06);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+.leafy-nav-standalone-btn.plus-btn:hover {
+  transform: scale(1.18);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+.leafy-nav-standalone-btn.plus-btn:active {
+  transform: scale(0.96);
+}
+
+/* ==========================================================================
+   SCREEN 2: PLANT DETAIL SCREEN
+   ========================================================================== */
+
+.leafy-detail-screen {
+  background-color: var(--leafy-detail-bg);
+  min-height: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.leafy-detail-screen::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.leafy-detail-scroll-container {
+  padding: 18px 18px 24px 18px;
+  max-width: 412px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.leafy-detail-scroll-container::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Hero Card (Screen 2) */
+.leafy-detail-hero-card {
+  width: 100%;
+  height: 410px;
+  border-radius: var(--leafy-card-radius);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 24px 24px 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 10;
+  position: relative;
+}
+
+.leafy-hero-left-nav {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.leafy-hero-back-btn {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 1px;
+  transition: transform 0.15s ease, background 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.leafy-hero-back-btn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.08);
+}
+
+.leafy-hero-back-btn:active {
+  transform: scale(0.94);
+}
+
+.leafy-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leafy-hero-edit-btn {
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+  outline: none;
+}
+
+.leafy-hero-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.12);
+  transform: scale(1.1);
+}
+
+.leafy-hero-edit-btn:active {
+  transform: scale(0.92);
+}
+
+.leafy-hero-title-group {
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.leafy-hero-nickname {
+  font-size: 34px;
+  font-weight: 800;
+  color: #000000;
+  margin: 0;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.leafy-hero-species {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 3px 0 0 0;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+}
+
+.leafy-hero-icon-wrap {
+  padding-top: 4px;
+  user-select: none;
+}
+
+/* Hero Circles & Cutout Plant */
+.leafy-hero-visual-stage {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 310px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.leafy-hero-circle {
+  border-radius: 50%;
+  position: absolute;
+}
+
+.leafy-hero-circle-dark {
+  width: 250px;
+  height: 250px;
+  left: 10px;
+  bottom: 15px;
+}
+
+.leafy-hero-circle-light {
+  width: 250px;
+  height: 250px;
+  left: 110px;
+  bottom: 25px;
+}
+
+.leafy-hero-plant-img {
+  position: absolute;
+  bottom: -8px;
+  right: -12px;
+  width: 315px;
+  height: 315px;
+  object-fit: contain;
+  z-index: 6;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.18));
+}
+
+/* Information Bento Modules */
+.leafy-info-modules-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 1. Interlocking Soil & Age Panel matching crop_soil.png */
+.leafy-soil-bento-container {
+  background-color: #9E5949;
+  border-radius: var(--leafy-bento-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.leafy-soil-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.leafy-soil-label-box {
+  padding: 22px 24px 10px 24px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.leafy-soil-heading {
+  font-size: 38px;
+  font-weight: 800;
+  color: #4A2922;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -0.6px;
+}
+
+.leafy-age-badge-card {
+  background-color: #96BB7C;
+  border-radius: 22px;
+  padding: 14px 18px 12px 18px;
+  margin: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 175px;
+  box-sizing: border-box;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.leafy-age-badge-card.clickable {
+  cursor: pointer;
+  outline: none;
+}
+
+.leafy-age-badge-card.clickable:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.leafy-age-badge-card.clickable:active {
+  transform: scale(0.98);
+}
+
+.leafy-age-badge-card.clickable:focus-visible {
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #96BB7C;
+}
+
+.leafy-age-icon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leafy-age-edit-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(45, 60, 35, 0.1);
+  opacity: 0.65;
+  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.leafy-age-badge-card.clickable:hover .leafy-age-edit-hint {
+  opacity: 1;
+  background: rgba(45, 60, 35, 0.18);
+  transform: scale(1.12);
+}
+
+.leafy-age-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.leafy-age-number {
+  font-size: 64px;
+  font-weight: 350;
+  color: #2D3C23;
+  line-height: 0.9;
+  letter-spacing: -2px;
+}
+
+.leafy-age-unit {
+  font-size: 24px;
+  font-weight: 350;
+  color: #2D3C23;
+  line-height: 1;
+  margin-left: 4px;
+}
+
+/* Date of Birth section underneath large year number */
+.leafy-age-dob-group {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(45, 60, 35, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.leafy-age-dob-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: rgba(45, 60, 35, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.leafy-age-dob-val {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #20301A;
+  line-height: 1.2;
+}
+
+.leafy-soil-bottom-shelf {
+  min-height: 96px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 20px 18px 20px;
+  display: flex;
+  align-items: center;
+}
+
+.leafy-soil-composition-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.leafy-soil-tag {
+  background: rgba(74, 41, 34, 0.25);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.4px;
+}
+
+/* 2. Water Cycle Cyan Pill */
+.leafy-water-cycle-pill {
+  background-color: #C9FAFF;
+  border-radius: var(--leafy-pill-radius);
+  height: 52px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+  user-select: none;
+}
+
+.leafy-water-cycle-pill:hover {
+  filter: brightness(1.02);
+  transform: translateY(-1px);
+}
+
+.leafy-water-cycle-pill:active {
+  transform: scale(0.99);
+}
+
+.leafy-water-text-group {
+  display: flex;
+  align-items: center;
+}
+
+.leafy-water-title {
+  font-family: var(--leafy-font);
+  font-size: 17px;
+  font-weight: 700;
+  color: #20383C;
+  letter-spacing: -0.2px;
+  text-transform: none;
+  line-height: 1.2;
+  -webkit-font-smoothing: antialiased;
+}
+
+.leafy-water-icon-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* 3. Bottom Row: Explore + Pink Card matching crop_bottom.png */
+.leafy-detail-bottom-row {
+  display: grid;
+  grid-template-columns: 1.18fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.leafy-explore-card {
+  background-color: #708C5B;
+  border-radius: var(--leafy-bento-radius);
+  padding: 22px 20px 18px 20px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+  user-select: none;
+}
+
+.leafy-explore-card:hover {
+  filter: brightness(1.03);
+  transform: translateY(-2px);
+}
+
+.leafy-explore-card:active {
+  transform: scale(0.98);
+}
+
+.leafy-explore-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-explore-pre {
+  font-size: 13px;
+  font-weight: 500;
+  color: #23321C;
+  line-height: 1.2;
+}
+
+.leafy-explore-species {
+  font-size: 26px;
+  font-weight: 700;
+  color: #23321C;
+  margin: 3px 0 0 0;
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+}
+
+.leafy-explore-icon-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 4px;
+}
+
+/* Pastel Pink Blank Card matching crop_bottom.png */
+.leafy-pink-accent-card {
+  background-color: #FF9D9D;
+  border-radius: var(--leafy-bento-radius);
+  height: 180px;
+  box-sizing: border-box;
+}
+
+/* Extended Detail Care Section */
+.leafy-detail-journal-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--leafy-bento-radius);
+  padding: 20px;
+  margin-top: 6px;
+}
+
+.leafy-detail-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #C8D7C2;
+  margin: 0 0 12px 0;
+}
+
+.leafy-detail-journal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leafy-detail-journal-item {
+  background: rgba(0, 0, 0, 0.18);
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+
+.leafy-journal-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.leafy-journal-date {
+  font-size: 11px;
+  color: #9AB594;
+  font-weight: 600;
+}
+
+.leafy-journal-condition {
+  font-size: 11px;
+  background: rgba(150, 187, 124, 0.2);
+  color: #96BB7C;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.leafy-journal-notes {
+  font-size: 13px;
+  color: #E2ECE0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Modal overlays */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modal-card {
+  background: #FFFFFF;
+  color: #111827;
+  border-radius: 28px;
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #111827;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6B7280;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+.minimal-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.minimal-input:focus {
+  border-color: #242F21;
+}
+
+.btn-primary-wide {
+  width: 100%;
+  padding: 14px;
+  background: #242F21;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  margin-top: 10px;
+}
+
+.btn-primary-wide:hover {
+  opacity: 0.92;
+}
+
+.btn-danger-wide {
+  width: 100%;
+  padding: 12px;
+  background: #FEE2E2;
+  color: #DC2626;
+  border: none;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* Plant Book Screen */
+.leafy-plantbook-container {
+  background: #F0F0F0;
+  min-height: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 24px 20px 40px 20px;
+  overflow-y: auto;
+}
+
+.leafy-plantbook-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.leafy-plantbook-back-btn {
+  background: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.leafy-plantbook-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  color: #111827;
+}
+
+.leafy-search-input-pill {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 9999px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  font-size: 14px;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.leafy-book-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leafy-book-card-item {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.leafy-book-card-item:hover {
+  transform: translateY(-1px);
+}
+
+.leafy-book-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.leafy-book-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-book-plant-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+
+.leafy-book-plant-species {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   INTERACTIVE POPUP MODALS (Owner Name & Plant Age Edit)
+   ========================================================================== */
+
+.leafy-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 20, 19, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: leafyBackdropFadeIn 0.18s ease-out;
+}
+
+.leafy-edit-popup {
+  background: #FFFFFF;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 380px;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  animation: leafyPopupSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #111827;
+}
+
+.leafy-edit-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.leafy-popup-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-edit-popup-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+}
+
+.leafy-popup-subtitle {
+  font-size: 12.5px;
+  color: #6B7280;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.leafy-popup-close-btn {
+  background: #F3F4F6;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  padding: 0;
+  outline: none;
+}
+
+.leafy-popup-close-btn:hover {
+  background: #E5E7EB;
+  transform: scale(1.08);
+}
+
+.leafy-edit-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.leafy-popup-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leafy-popup-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: -0.2px;
+}
+
+.leafy-popup-text-input,
+.leafy-popup-date-input,
+.leafy-popup-number-input,
+.leafy-popup-select-input {
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  color: #111827;
+  background: #F9FAFB;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.leafy-popup-text-input:focus,
+.leafy-popup-date-input:focus,
+.leafy-popup-number-input:focus,
+.leafy-popup-select-input:focus {
+  border-color: #242F21;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(36, 47, 33, 0.12);
+}
+
+.leafy-popup-hint {
+  font-size: 11.5px;
+  color: #6B7280;
+  line-height: 1.35;
+}
+
+/* DOB vs Approximate toggle */
+.leafy-dob-toggle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #F3F4F6;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.leafy-dob-mode-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.leafy-dob-mode-btn.active {
+  background: #FFFFFF;
+  color: #111827;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.leafy-manual-age-row {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 10px;
+}
+
+/* Live Preview Box */
+.leafy-popup-preview-box {
+  background: #F4F6F4;
+  border: 1.5px dashed #D1D5DB;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.leafy-popup-preview-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leafy-popup-preview-heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-popup-preview-owner {
+  font-size: 22px;
+  font-weight: 800;
+  color: #000000;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.leafy-popup-preview-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: #9C9C9C;
+}
+
+/* Age preview card inside modal */
+.leafy-age-preview-card {
+  background: #F0F6EB;
+  border: 1.5px solid #D5E5CE;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leafy-age-preview-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.leafy-age-preview-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #527344;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.leafy-age-preview-number {
+  font-size: 26px;
+  font-weight: 800;
+  color: #2D3C23;
+  line-height: 1.1;
+}
+
+.leafy-age-preview-dob-line {
+  display: flex;
+  gap: 4px;
+  font-size: 11.5px;
+  margin-top: 2px;
+}
+
+.leafy-age-preview-dob-label {
+  color: #6B7280;
+  font-weight: 600;
+}
+
+.leafy-age-preview-dob-val {
+  color: #2D3C23;
+  font-weight: 700;
+}
+
+/* 2-Step Confirmation View */
+.leafy-confirm-message-box {
+  background: #FEF3C7;
+  border: 1.5px solid #FDE68A;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+}
+
+.leafy-confirm-question {
+  font-size: 14px;
+  font-weight: 700;
+  color: #92400E;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.leafy-confirm-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0 10px 0;
+}
+
+.leafy-confirm-compare-box {
+  background: #F9FAFB;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.leafy-confirm-compare-box.new {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.leafy-compare-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #6B7280;
+}
+
+.leafy-compare-badge.active {
+  color: #16A34A;
+}
+
+.leafy-compare-main {
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.15;
+}
+
+.leafy-compare-sub {
+  font-size: 10.5px;
+  color: #6B7280;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.leafy-confirm-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-align: center;
+}
+
+/* Action Buttons */
+.leafy-popup-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.leafy-popup-btn {
+  flex: 1;
+  height: 46px;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.leafy-popup-btn.primary {
+  background: #242F21;
+  color: #FFFFFF;
+}
+
+.leafy-popup-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.leafy-popup-btn.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leafy-popup-btn.secondary {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.leafy-popup-btn.secondary:hover {
+  background: #E5E7EB;
+}
+
+.leafy-popup-btn.primary.confirm-btn {
+  background: #15803D;
+  color: #FFFFFF;
+}
+
+.leafy-popup-btn.primary.confirm-btn:hover {
+  background: #16A34A;
+}
+
+/* Animations */
+@keyframes leafyBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes leafyPopupSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE REFINEMENTS (Small Smartphones: 320px – 375px)
+   ========================================================================== */
+
+@media (max-width: 375px) {
+  .leafy-collection-header {
+    padding: 24px 20px 0 20px;
+  }
+
+  .leafy-plant-stack-stage {
+    height: 350px;
+  }
+
+  .leafy-stack-viewport {
+    width: 280px;
+    height: 310px;
+  }
+
+  .leafy-card-nickname {
+    font-size: 28px;
+  }
+
+  .leafy-card-species {
+    font-size: 14px;
+  }
+
+  .leafy-card-plant-img {
+    width: 220px;
+    height: 220px;
+  }
+
+  .leafy-soil-heading {
+    font-size: 30px;
+  }
+
+  .leafy-age-badge-card {
+    min-width: 145px;
+    padding: 12px 14px;
+  }
+
+  .leafy-age-number {
+    font-size: 52px;
+  }
+
+  .leafy-age-unit {
+    font-size: 20px;
+  }
+
+  .leafy-plant-card.active-card {
+    box-shadow:
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 1px rgba(0, 0, 0, 0.04),
+      0 -3px 12px -2px rgba(18, 28, 20, 0.10),
+      0 6px 14px -3px rgba(18, 28, 20, 0.10),
+      0 16px 32px -8px rgba(18, 28, 20, 0.18);
+  }
+
+  .leafy-plant-card.stacked-card {
+    box-shadow:
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.45),
+      0 0 0 1px rgba(0, 0, 0, 0.035),
+      0 -2px 8px -2px rgba(18, 28, 20, 0.08),
+      0 4px 10px -3px rgba(18, 28, 20, 0.07),
+      0 12px 22px -6px rgba(18, 28, 20, 0.12);
+  }
+
+  .leafy-detail-scroll-container {
+    padding: 16px 16px 36px 16px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .leafy-stack-item-wrapper {
+    transform: none !important;
+  }
+}
+

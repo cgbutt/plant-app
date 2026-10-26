@@ -47,7 +47,7 @@ export interface Plant {
   watering_time: string;
   suggestion: string;
   current_stage: GrowthStage;
-  
+
   // ASPER UI specific fields
   date_added?: string;
   location?: string;
@@ -61,24 +61,11 @@ export interface Plant {
   stage2_model?: string;
   stage3_model?: string;
 
+  card_color?: string;
+  image_cutout?: string;
+  birth_date?: string; // YYYY-MM-DD or ISO string
+
   // Metadata
   created_at: string;
   updated_at: string;
-}
-
-export interface AiAnalysisInput {
-  plant: Plant;
-  latestPhoto?: PlantPhoto;
-  journalEntries: JournalEntry[];
-}
-
-export interface AiAnalysisOutput {
-  leaf_condition: string;
-  color: string;
-  soil_condition: string;
-  watering_time: string;
-  suggestion: string;
-  confidence: number;
-  analysis_summary: string;
-  recommendations: string[];
 }
