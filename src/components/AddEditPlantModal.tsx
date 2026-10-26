@@ -1,65 +1,91 @@
 import React, { useState } from 'react';
-import type { Plant, GrowthStage } from '../types/plant';
+import type { Plant } from '../types/plant';
 
-interface AddEditPlantModalProps {
+export interface AddEditPlantModalProps {
   plant?: Plant | null;
   onClose: () => void;
   onSave: (savedPlant: Plant) => void;
   onDelete?: (plantId: string) => void;
 }
 
+export const COLOR_OPTIONS = [
+  { id: 'pink', color: '#FF9D9D', label: 'Pastel Pink' },
+  { id: 'green', color: '#708C5B', label: 'Sage Green' }
+];
+
+const COMMON_SPECIES = [
+  'Pothos',
+  'Monstera Deliciosa',
+  'Philodendron',
+  'Spider Plant',
+  'Calathea',
+  'Snake Plant',
+  'Ficus Elastica',
+  'Peace Lily',
+  'ZZ Plant'
+];
+
 export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
   plant,
   onClose,
-  onSave,
-  onDelete
+  onSave
 }) => {
   const isEditing = Boolean(plant);
 
   const [name, setName] = useState(plant?.name || '');
   const [species, setSpecies] = useState(plant?.species || '');
-  const [age, setAge] = useState(plant?.age || '');
-  const [leafCondition, setLeafCondition] = useState(plant?.leaf_condition || 'Healthy');
-  const [color, setColor] = useState(plant?.color || 'Dark Green');
-  const [soilCondition, setSoilCondition] = useState(plant?.soil_condition || 'Slightly Dry');
-  const [wateringTime, setWateringTime] = useState(plant?.watering_time || 'In 2 Days');
-  const [suggestion, setSuggestion] = useState(plant?.suggestion || 'Move closer to indirect light');
-
-  const [stage1Url, setStage1Url] = useState(plant?.stage1_model || '');
-  const [stage2Url, setStage2Url] = useState(plant?.stage2_model || '');
-  const [stage3Url, setStage3Url] = useState(plant?.stage3_model || '');
-
-  const handleGlbUpload = (stage: GrowthStage, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const url = URL.createObjectURL(file);
-      if (stage === 1) setStage1Url(url);
-      if (stage === 2) setStage2Url(url);
-      if (stage === 3) setStage3Url(url);
-    }
-  };
+  const [selectedColor, setSelectedColor] = useState<string>(
+    plant?.card_color || COLOR_OPTIONS[0].color
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !species.trim() || !age.trim()) return;
+
+    const trimmedName = name.trim();
+    const trimmedSpecies = species.trim();
+
+    if (!trimmedName) {
+      setErrorMessage('Please enter a plant name');
+      return;
+    }
+
+    if (!trimmedSpecies) {
+      setErrorMessage('Please enter a species');
+      return;
+    }
+
+    // Determine cutout image based on species or color
+    const speciesLower = trimmedSpecies.toLowerCase();
+    let imageCutout = '/plants/asper-pothos.png';
+    if (speciesLower.includes('monst')) {
+      imageCutout = '/plants/monstera.png';
+    } else if (speciesLower.includes('spider') || speciesLower.includes('chlorophytum')) {
+      imageCutout = '/plants/spider-plant.png';
+    } else if (selectedColor === '#FF9D9D' || speciesLower.includes('calathea') || speciesLower.includes('pink')) {
+      imageCutout = '/plants/golden-pothos.png';
+    }
 
     const plantData: Plant = {
       id: plant?.id || 'plant-' + Date.now(),
-      name: name.trim(),
-      species: species.trim(),
-      age: age.trim(),
-      leaf_condition: leafCondition.trim(),
-      color: color.trim(),
-      soil_condition: soilCondition.trim(),
-      watering_time: wateringTime.trim(),
-      suggestion: suggestion.trim(),
+      name: trimmedName,
+      species: trimmedSpecies,
+      card_color: selectedColor,
+      color: selectedColor,
+      age: plant?.age || '01 Year',
+      birth_date: plant?.birth_date || new Date().toISOString().split('T')[0],
+      growth_stage_label: plant?.growth_stage_label || '01 / Sprout',
       current_stage: plant?.current_stage || 1,
-      species_id: plant?.species_id,
-      stage1_model: stage1Url,
-      stage2_model: stage2Url,
-      stage3_model: stage3Url,
-      card_color: plant?.card_color,
-      image_cutout: plant?.image_cutout,
+      location: plant?.location || 'Living room',
+      last_update: 'Just now',
+      sunlight: plant?.sunlight || 'Bright, indirect',
+      watering_time: plant?.watering_time || 'Check in 3 days',
+      soil_condition: plant?.soil_condition || 'Optimal Moisture',
+      soil_composition: plant?.soil_composition || ['40% POTTING SOIL', '30% PERLITE', '30% COCO PEAT'],
+      suggestion: plant?.suggestion || 'Water when top 2 inches feel dry',
+      date_added: plant?.date_added || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      leaf_condition: plant?.leaf_condition || 'Healthy',
+      image_cutout: plant?.image_cutout || imageCutout,
       created_at: plant?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -69,180 +95,114 @@ export const AddEditPlantModal: React.FC<AddEditPlantModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="modal-title">
-            {isEditing ? `EDIT SPECIMEN — ${plant?.name}` : 'REGISTER NEW PLANT SPECIMEN'}
-          </div>
-          <button className="close-btn" onClick={onClose}>✕</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Identity Fields */}
-          <div className="form-row">
-            <label className="field-label">PLANT NAME</label>
-            <input
-              type="text"
-              placeholder="e.g. MONSTERA"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          <div className="form-grid-2">
-            <div className="form-row">
-              <label className="field-label">SPECIES</label>
-              <input
-                type="text"
-                placeholder="e.g. MONSTERA DELICIOSA"
-                value={species}
-                onChange={(e) => setSpecies(e.target.value)}
-                className="minimal-input"
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="field-label">AGE</label>
-              <input
-                type="text"
-                placeholder="e.g. 2 YEARS"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="minimal-input"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Health Information Fields */}
-          <div className="form-row">
-            <label className="field-label">LEAF CONDITION</label>
-            <input
-              type="text"
-              placeholder="Healthy"
-              value={leafCondition}
-              onChange={(e) => setLeafCondition(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label className="field-label">COLOR</label>
-            <input
-              type="text"
-              placeholder="Dark Green"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label className="field-label">SOIL CONDITION</label>
-            <input
-              type="text"
-              placeholder="Slightly Dry"
-              value={soilCondition}
-              onChange={(e) => setSoilCondition(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label className="field-label">WATERING TIME</label>
-            <input
-              type="text"
-              placeholder="In 2 Days"
-              value={wateringTime}
-              onChange={(e) => setWateringTime(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <label className="field-label">SUGGESTION</label>
-            <input
-              type="text"
-              placeholder="Move closer to indirect light"
-              value={suggestion}
-              onChange={(e) => setSuggestion(e.target.value)}
-              className="minimal-input"
-              required
-            />
-          </div>
-
-          {/* 3D Models Section */}
-          <div className="form-section-title">3D MODELS (GLB/GLTF)</div>
-          
-          <div className="form-grid-3">
-            <div className="form-row">
-              <label className="field-label">STAGE 1 GLB</label>
-              <label className="upload-btn block">
-                {stage1Url ? 'REPLACE STAGE 1' : 'UPLOAD STAGE 1'}
-                <input
-                  type="file"
-                  accept=".glb,.gltf"
-                  onChange={(e) => handleGlbUpload(1, e)}
-                />
-              </label>
-            </div>
-
-            <div className="form-row">
-              <label className="field-label">STAGE 2 GLB</label>
-              <label className="upload-btn block">
-                {stage2Url ? 'REPLACE STAGE 2' : 'UPLOAD STAGE 2'}
-                <input
-                  type="file"
-                  accept=".glb,.gltf"
-                  onChange={(e) => handleGlbUpload(2, e)}
-                />
-              </label>
-            </div>
-
-            <div className="form-row">
-              <label className="field-label">STAGE 3 GLB</label>
-              <label className="upload-btn block">
-                {stage3Url ? 'REPLACE STAGE 3' : 'UPLOAD STAGE 3'}
-                <input
-                  type="file"
-                  accept=".glb,.gltf"
-                  onChange={(e) => handleGlbUpload(3, e)}
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="modal-actions-bottom" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            {isEditing && onDelete && plant && (
-              <button
-                type="button"
-                className="minimal-btn"
-                style={{
-                  background: '#fee2e2',
-                  color: '#b91c1c',
-                  border: '1px solid #fca5a5',
-                  padding: '10px 16px',
-                  borderRadius: 'var(--radius-md)',
-                  fontWeight: 700,
-                  fontSize: '12px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => onDelete(plant.id)}
-              >
-                🗑️ DELETE SPECIMEN
-              </button>
-            )}
-            <button type="submit" className="minimal-btn save" style={{ flex: 1 }}>
-              {isEditing ? 'UPDATE SPECIMEN' : 'CREATE SPECIMEN'}
+    <div
+      className="leafy-add-modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Add plant specimen overlay"
+    >
+      <div
+        className="leafy-add-modal-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <form onSubmit={handleSubmit} className="leafy-add-modal-form" noValidate>
+          {/* Top Bar: Cancel (Left) and Create (Right) */}
+          <div className="leafy-add-modal-header">
+            <button
+              type="button"
+              className="leafy-add-cancel-btn"
+              onClick={onClose}
+              aria-label="Cancel and close"
+            >
+              Cancel
             </button>
+            <button
+              type="submit"
+              className="leafy-add-create-btn"
+              aria-label={isEditing ? 'Save changes' : 'Create plant'}
+            >
+              {isEditing ? 'Save' : 'Create'}
+            </button>
+          </div>
+
+          {/* Validation Feedback */}
+          {errorMessage && (
+            <div className="leafy-add-error-hint">{errorMessage}</div>
+          )}
+
+          {/* Body Fields */}
+          <div className="leafy-add-fields-body">
+            {/* Field 1: Plant Name */}
+            <div className="leafy-add-field-group">
+              <label htmlFor="leafy-plant-name-input" className="leafy-add-label">
+                Plant Name
+              </label>
+              <input
+                id="leafy-plant-name-input"
+                type="text"
+                placeholder="Casper"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
+                className="leafy-add-input"
+                autoFocus
+                autoComplete="off"
+              />
+            </div>
+
+            {/* Field 2: Species & Colors (Row) */}
+            <div className="leafy-add-species-color-row">
+              <div className="leafy-add-species-column">
+                <label htmlFor="leafy-plant-species-input" className="leafy-add-label">
+                  Species
+                </label>
+                <input
+                  id="leafy-plant-species-input"
+                  type="text"
+                  placeholder="Pothos"
+                  value={species}
+                  onChange={(e) => {
+                    setSpecies(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  className="leafy-add-input"
+                  list="leafy-common-species"
+                  autoComplete="off"
+                />
+                <datalist id="leafy-common-species">
+                  {COMMON_SPECIES.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+              </div>
+
+              {/* Lower-Right Circular Colour Options */}
+              <div
+                className="leafy-add-color-options"
+                role="radiogroup"
+                aria-label="Card colour options"
+              >
+                {COLOR_OPTIONS.map((opt) => {
+                  const isSelected = selectedColor.toLowerCase() === opt.color.toLowerCase();
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`leafy-add-color-circle ${isSelected ? 'selected' : ''}`}
+                      style={{ backgroundColor: opt.color }}
+                      onClick={() => setSelectedColor(opt.color)}
+                      aria-label={`${opt.label} color`}
+                      aria-checked={isSelected}
+                      role="radio"
+                      title={opt.label}
+                    />
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </form>
       </div>

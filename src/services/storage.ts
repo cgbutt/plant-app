@@ -269,7 +269,7 @@ export class StorageService {
       newPlants = [...plants];
       newPlants[index] = { ...updatedPlant, updated_at: new Date().toISOString() };
     } else {
-      newPlants = [...plants, updatedPlant];
+      newPlants = [updatedPlant, ...plants];
     }
     this.savePlants(newPlants);
     return newPlants;

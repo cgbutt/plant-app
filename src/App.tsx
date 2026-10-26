@@ -172,13 +172,17 @@ export const App: React.FC = () => {
           return [saved, ...prev];
         });
         setSelectedPlantId(saved.id);
+        setActivePlantIndex(0);
+        setViewMode('collection');
       }
     } else {
       const updatedList = StorageService.updatePlant(savedPlant);
       setPlants(updatedList);
       setSelectedPlantId(savedPlant.id);
+      setActivePlantIndex(0);
+      setViewMode('collection');
     }
-    showToast(`✓ Saved ${savedPlant.name}`);
+    showToast(`✓ Added ${savedPlant.name} to collection`);
   };
 
   // Plant deleted
